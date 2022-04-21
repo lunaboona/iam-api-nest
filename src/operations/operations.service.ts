@@ -21,7 +21,9 @@ export class OperationsService {
   public async create(
     createOperationDto: CreateOperationDto,
   ): Promise<Operation> {
-    const module = this.modulesService.findOne(createOperationDto.moduleId);
+    const module = await this.modulesService.findOne(
+      createOperationDto.moduleId,
+    );
     if (!module) {
       throw new BadRequestException('Module does not exist');
     }
@@ -59,7 +61,9 @@ export class OperationsService {
       throw new NotFoundException();
     }
 
-    const module = this.modulesService.findOne(updateOperationDto.moduleId);
+    const module = await this.modulesService.findOne(
+      updateOperationDto.moduleId,
+    );
     if (!module) {
       throw new BadRequestException('Module does not exist');
     }
