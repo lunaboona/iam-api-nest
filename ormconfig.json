@@ -5,7 +5,7 @@
   "username": "root",
   "password": "root",
   "database": "iam",
-  "synchronize": true,
+  "synchronize": false,
   "logging": false,
   "entities": ["dist/**/*.entity{.ts,.js}"]
 }
