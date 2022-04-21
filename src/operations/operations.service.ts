@@ -33,9 +33,13 @@ export class OperationsService {
       throw new BadRequestException('Activity name is taken');
     }
 
-    return await this.operationsRepository.save(
-      new Operation(createOperationDto),
-    );
+    const operation = new Operation();
+    operation.id = createOperationDto.id;
+    operation.name = createOperationDto.name;
+    operation.activityName = createOperationDto.activityName;
+    operation.moduleId = createOperationDto.moduleId;
+
+    return await this.operationsRepository.save(operation);
   }
 
   public async findAll(): Promise<Operation[]> {

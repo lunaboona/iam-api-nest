@@ -30,8 +30,15 @@ export class UsersService {
     if (existingUserByUsername) {
       throw new BadRequestException('Username is taken');
     }
+    const user = new User();
+    user.id = createUserDto.id;
+    user.name = createUserDto.name;
+    user.username = createUserDto.username;
+    user.email = createUserDto.email;
+    user.passwordHash = createUserDto.passwordHash;
+    user.active = createUserDto.active;
 
-    const result = await this.usersRepository.save(new User(createUserDto));
+    const result = await this.usersRepository.save(user);
     return result;
   }
 

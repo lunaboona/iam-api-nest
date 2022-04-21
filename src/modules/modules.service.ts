@@ -13,7 +13,12 @@ export class ModulesService {
   ) {}
 
   public async create(createModuleDto: CreateModuleDto): Promise<ModuleEntity> {
-    return await this.modulesRepository.save(new ModuleEntity(createModuleDto));
+    const module = new ModuleEntity();
+    module.id = createModuleDto.id;
+    module.name = createModuleDto.name;
+    module.icon = createModuleDto.icon;
+
+    return await this.modulesRepository.save(module);
   }
 
   public async findAll(): Promise<ModuleEntity[]> {

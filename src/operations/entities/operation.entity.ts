@@ -8,17 +8,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { CreateOperationDto } from '../dto/create-operation.dto';
-
 @Entity()
 export class Operation {
-  constructor(createOperationDto: CreateOperationDto) {
-    this.id = createOperationDto.id;
-    this.name = createOperationDto.name;
-    this.activityName = createOperationDto.activityName;
-    this.moduleId = createOperationDto.moduleId;
-  }
-
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
