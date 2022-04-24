@@ -7,6 +7,7 @@ import { OperationsModule } from './operations/operations.module';
 import { ModulesModule } from './modules/modules.module';
 import { MovementTypesModule } from './movement-types/movement-types.module';
 import { DocumentTypesModule } from './document-types/document-types.module';
+import { MovementDefinitionsModule } from './movement-definitions/movement-definitions.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DocumentTypesModule } from './document-types/document-types.module';
     ModulesModule,
     MovementTypesModule,
     DocumentTypesModule,
+    MovementDefinitionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
