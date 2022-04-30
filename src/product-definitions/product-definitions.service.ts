@@ -23,7 +23,7 @@ export class ProductDefinitionsService {
     productDefinition.sku = createProductDefinitionDto.sku;
     productDefinition.name = createProductDefinitionDto.name;
     productDefinition.description = createProductDefinitionDto.description;
-    productDefinition.listPrice = createProductDefinitionDto.list_price;
+    productDefinition.listPrice = createProductDefinitionDto.listPrice;
 
     return await this.productDefinitionsRepository.save(productDefinition);
   }
@@ -50,7 +50,7 @@ export class ProductDefinitionsService {
     productDefinition.sku = updateProductDefinitionDto.sku;
     productDefinition.name = updateProductDefinitionDto.name;
     productDefinition.description = updateProductDefinitionDto.description;
-    productDefinition.listPrice = updateProductDefinitionDto.list_price;
+    productDefinition.listPrice = updateProductDefinitionDto.listPrice;
 
     return await this.productDefinitionsRepository.update(
       id,
