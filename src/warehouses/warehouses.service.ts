@@ -44,11 +44,11 @@ export class WarehousesService {
   }
 
   public async remove(id: string): Promise<void> {
-    const productDefinition = await this.warehousesRepository.findOne(id);
-    if (!productDefinition) {
+    const warehouse = await this.warehousesRepository.findOne(id);
+    if (!warehouse) {
       throw new NotFoundException();
     }
-    await this.warehousesRepository.delete(productDefinition);
+    await this.warehousesRepository.delete(warehouse);
     return;
   }
 }
