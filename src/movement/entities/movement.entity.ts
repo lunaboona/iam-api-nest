@@ -10,6 +10,7 @@ import {
 import { Warehouse } from './../../warehouses/entities/warehouse.entity';
 import { MovementDefinition } from './../../movement-definitions/entities/movement-definition.entity';
 import { Product } from 'src/product/entities/product.entity';
+import { CreateMovementDto } from './../dto/create-movement.dto';
 
 @Entity()
 export class Movement {
@@ -19,7 +20,7 @@ export class Movement {
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   totalPrice: number;
 
-  @Column({ type: 'timestamptz' })
+  @Column({ type: 'datetime' })
   dateTime: Date;
 
   @Column()
@@ -42,4 +43,13 @@ export class Movement {
   @ManyToMany(() => Product)
   @JoinTable()
   products: Product[];
+
+  public fillFields(createMovement: CreateMovementDto, products: Product[]) {
+    this.totalPrice = createMovement.totalPrice;
+    this.dateTime = createMovement.dateTime;
+    this.document = createMovement.document;
+    this.movementDefinitionId = createMovement.movementDefinitionId;
+    this.warehouseId = createMovement.warehouseId;
+    this.products = products;
+  }
 }

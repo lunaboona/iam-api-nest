@@ -11,6 +11,7 @@ import { MovementDefinitionsModule } from './movement-definitions/movement-defin
 import { ProductDefinitionsModule } from './product-definitions/product-definitions.module';
 import { WarehousesModule } from './warehouses/warehouses.module';
 import { ProductsModule } from './product/products.module';
+import { MovementsModule } from './movement/movements.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ProductsModule } from './product/products.module';
     ProductDefinitionsModule,
     WarehousesModule,
     ProductsModule,
+    MovementsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
