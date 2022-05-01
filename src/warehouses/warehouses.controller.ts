@@ -7,6 +7,7 @@ import {
   Put,
   Delete,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
@@ -22,13 +23,13 @@ export class WarehousesController {
   }
 
   @Get()
-  findAll() {
-    return this.warehousesService.findAll();
+  findAll(@Query('expand') expand: string) {
+    return this.warehousesService.findAll(expand === 'true');
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.warehousesService.findOne(id);
+  findOne(@Param('id') id: string, @Query('expand') expand: string) {
+    return this.warehousesService.findOne(id, expand === 'true');
   }
 
   @Get(':id/products')

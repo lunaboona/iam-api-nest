@@ -41,12 +41,23 @@ export class WarehousesService {
     return await this.warehousesRepository.save(warehouse);
   }
 
-  public async findAll(): Promise<Warehouse[]> {
-    return await this.warehousesRepository.find();
+  public async findAll(expand: boolean = false): Promise<Warehouse[]> {
+    let relations = [];
+    if (expand) {
+      relations = ['products', 'movements'];
+    }
+    return await this.warehousesRepository.find({ relations });
   }
 
-  public async findOne(id: string): Promise<Warehouse> {
-    return await this.warehousesRepository.findOne(id);
+  public async findOne(
+    id: string,
+    expand: boolean = false,
+  ): Promise<Warehouse> {
+    let relations = [];
+    if (expand) {
+      relations = ['products', 'movements'];
+    }
+    return await this.warehousesRepository.findOne(id, { relations });
   }
 
   public async update(
