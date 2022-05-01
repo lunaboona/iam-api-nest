@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateDocumentTypeDto } from './dto/create-document-type.dto';
-import { UpdateDocumentTypeDto } from './dto/update-document-type.dto';
 import { DocumentType } from './entities/document-type.entity';
 
 @Injectable()
@@ -15,9 +14,8 @@ export class DocumentTypesService {
   public async create(
     createDocumentTypeDto: CreateDocumentTypeDto,
   ): Promise<DocumentType> {
-    const documentType = new DocumentType();
-    documentType.name = createDocumentTypeDto.name;
-    documentType.mask = createDocumentTypeDto.mask;
+    let documentType = new DocumentType();
+    documentType = { ...documentType, ...createDocumentTypeDto, active: true };
 
     return await this.documentTypesRepository.save(documentType);
   }
@@ -30,27 +28,25 @@ export class DocumentTypesService {
     return await this.documentTypesRepository.findOne(id);
   }
 
-  public async update(
-    id: string,
-    updateDocumentTypeDto: UpdateDocumentTypeDto,
-  ): Promise<UpdateResult> {
-    const documentType = await this.documentTypesRepository.findOne(id);
-    if (!documentType) {
-      throw new NotFoundException();
-    }
-
-    documentType.name = updateDocumentTypeDto.name;
-    documentType.mask = updateDocumentTypeDto.mask;
-
-    return await this.documentTypesRepository.update(id, documentType);
+  public async setAsActive(id: string): Promise<DocumentType> {
+    return this.setActiveState(id, true);
   }
 
-  public async remove(id: string): Promise<void> {
+  public async setAsInactive(id: string): Promise<DocumentType> {
+    return this.setActiveState(id, false);
+  }
+
+  private async setActiveState(
+    id: string,
+    state: boolean,
+  ): Promise<DocumentType> {
     const documentType = await this.documentTypesRepository.findOne(id);
     if (!documentType) {
       throw new NotFoundException();
     }
-    await this.documentTypesRepository.delete(documentType);
-    return;
+
+    documentType.active = state;
+
+    return await this.documentTypesRepository.save(documentType);
   }
 }
