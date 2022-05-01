@@ -48,10 +48,12 @@ export class MovementsService {
         );
       }
 
-      if (this.productService.validateProductExpiration(product)) {
-        // TODO verificar se movement é do tipo perda
+      if (
+        this.productService.validateProductExpiration(product) &&
+        !movementDefinition.isLoss
+      ) {
         throw new BadRequestException(
-          `Product with id ${productId} is expired and cannot be processed`,
+          `Product with id ${productId} is expired and cannot be processed unless movement is defined as a loss`,
         );
       }
 
