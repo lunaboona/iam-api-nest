@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Warehouse } from './entities/warehouse.entity';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
+import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class WarehousesService {
@@ -12,11 +13,30 @@ export class WarehousesService {
     private warehousesRepository: Repository<Warehouse>,
   ) {}
 
+  public async getProducts(id: string): Promise<Product[]> {
+    const warehouse = await this.warehousesRepository.findOne(id, {
+      relations: ['products'],
+    });
+    if (!warehouse) {
+      throw new NotFoundException();
+    }
+    return warehouse.products;
+  }
+
+  public async getProductAmount(
+    id: string,
+    productDefinitionId: string,
+  ): Promise<number> {
+    return (await this.getProducts(id))?.filter(
+      (p) => p.productDefinitionId === productDefinitionId,
+    )?.length;
+  }
+
   public async create(
     createWarehouseDto: CreateWarehouseDto,
   ): Promise<Warehouse> {
-    const warehouse = new Warehouse();
-    warehouse.description = createWarehouseDto.description;
+    let warehouse = new Warehouse();
+    warehouse = { ...warehouse, ...createWarehouseDto, active: true };
 
     return await this.warehousesRepository.save(warehouse);
   }
@@ -43,12 +63,22 @@ export class WarehousesService {
     return await this.warehousesRepository.save(warehouse);
   }
 
-  public async remove(id: string): Promise<void> {
+  public async setAsActive(id: string): Promise<Warehouse> {
+    return this.setActiveState(id, true);
+  }
+
+  public async setAsInactive(id: string): Promise<Warehouse> {
+    return this.setActiveState(id, false);
+  }
+
+  private async setActiveState(id: string, state: boolean): Promise<Warehouse> {
     const warehouse = await this.warehousesRepository.findOne(id);
     if (!warehouse) {
       throw new NotFoundException();
     }
-    await this.warehousesRepository.delete(warehouse);
-    return;
+
+    warehouse.active = state;
+
+    return await this.warehousesRepository.save(warehouse);
   }
 }
