@@ -41,11 +41,19 @@ export class ProductsService {
     return await this.productsRepository.save(createProductDto);
   }
 
-  public async findAll(): Promise<Product[]> {
-    return await this.productsRepository.find();
+  public async findAll(expand: boolean = false): Promise<Product[]> {
+    let relations = [];
+    if (expand) {
+      relations = ['productDefinition', 'warehouse', 'movements'];
+    }
+    return await this.productsRepository.find({ relations });
   }
 
-  public async findOne(id: string): Promise<Product> {
-    return await this.productsRepository.findOne(id);
+  public async findOne(id: string, expand: boolean = false): Promise<Product> {
+    let relations = [];
+    if (expand) {
+      relations = ['productDefinition', 'warehouse', 'movements'];
+    }
+    return await this.productsRepository.findOne(id, { relations });
   }
 }

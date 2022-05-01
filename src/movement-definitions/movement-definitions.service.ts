@@ -52,7 +52,6 @@ export class MovementDefinitionsService {
   }
 
   public async findAll(expand: boolean = false): Promise<MovementDefinition[]> {
-    console.log(expand);
     const relations = [];
     if (expand) {
       relations.push('documentType');
