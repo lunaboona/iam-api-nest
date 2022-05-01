@@ -40,7 +40,7 @@ export class Movement {
   @JoinColumn({ name: 'warehouseId' })
   warehouse: Warehouse;
 
-  @ManyToMany(() => Product)
+  @ManyToMany(() => Product, (product) => product.movements)
   @JoinTable()
   products: Product[];
 

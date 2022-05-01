@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MovementDefinitionsService } from 'src/movement-definitions/movement-definitions.service';
 import { Product } from 'src/product/entities/product.entity';
@@ -17,6 +21,27 @@ export class MovementsService {
     private warehouseService: WarehousesService,
     private productService: ProductsService,
   ) {}
+
+  public async getProducts(id: string): Promise<Product[]> {
+    const movement = await this.movementsRepository.findOne(id, {
+      relations: ['products'],
+    });
+
+    if (!movement) {
+      throw new NotFoundException();
+    }
+    return movement.products;
+  }
+
+  public async getUnitPrice(id: string): Promise<number> {
+    const movement = await this.movementsRepository.findOne(id, {
+      relations: ['products'],
+    });
+    if (!movement) {
+      throw new NotFoundException();
+    }
+    return movement.totalPrice / movement.products.length;
+  }
 
   public async create(createMovementDto: CreateMovementDto): Promise<Movement> {
     const movementDefinition = await this.movementDefinitionsService.findOne(
@@ -40,13 +65,18 @@ export class MovementsService {
       throw new BadRequestException(`Movement must have at least one product`);
     }
 
-    productIds.forEach(async (productId) => {
+    for (const productId of productIds) {
       const product = await this.productService.findOne(productId);
       if (!product) {
         throw new BadRequestException(
           `Product with id ${productId} does not exist`,
         );
       }
+
+      // TODO product cant have warehouseId if incoming
+      // TODO add product warehouseId if incoming
+      // TODO remove product warehouseId if outgoing
+      // TODO filter productIds to remove duplicates
 
       if (
         this.productService.validateProductExpiration(product) &&
@@ -58,7 +88,7 @@ export class MovementsService {
       }
 
       products.push(product);
-    });
+    }
 
     const movement = new Movement();
     movement.fillFields(createMovementDto, products);

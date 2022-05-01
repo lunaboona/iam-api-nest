@@ -35,6 +35,7 @@ export class ProductsService {
       throw new BadRequestException('Product definition does not exist');
     }
 
+    // TODO product can't have warehouseId upon creation, must have movement to assign warehouseId
     const warehouse = await this.warehouseService.findOne(
       createProductDto.warehouseId,
     );
