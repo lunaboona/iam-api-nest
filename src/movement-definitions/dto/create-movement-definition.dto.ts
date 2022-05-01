@@ -1,5 +1,8 @@
+import { MovementNature } from '../enum/movement-nature.enum';
+
 export class CreateMovementDefinitionDto {
   name: string;
   documentTypeId: string;
-  movementTypeId: string;
+  nature: MovementNature;
+  isLoss: boolean;
 }
