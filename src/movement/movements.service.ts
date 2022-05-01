@@ -36,7 +36,7 @@ export class MovementsService {
     const products: Product[] = [];
     const productIds = createMovementDto.productIds;
 
-    if (productIds.length == 0) {
+    if (productIds.length === 0) {
       throw new BadRequestException(`Movement must have at least one product`);
     }
 
