@@ -1,9 +1,6 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Product } from 'src/product/entities/product.entity';
 import { Repository, UpdateResult } from 'typeorm';
 import { CreateProductDefinitionDto } from './dto/create-product-definition.dto';
 import { UpdateProductDefinitionDto } from './dto/update-product-definition.dto';
@@ -16,14 +13,28 @@ export class ProductDefinitionsService {
     private productDefinitionsRepository: Repository<ProductDefinition>,
   ) {}
 
+  public async getProducts(id: string): Promise<Product[]> {
+    const productDefinition = await this.productDefinitionsRepository.findOne(
+      id,
+      {
+        relations: ['products'],
+      },
+    );
+    if (!productDefinition) {
+      throw new NotFoundException();
+    }
+    return productDefinition.products;
+  }
+
+  public async getProductAmount(id: string): Promise<number> {
+    return (await this.getProducts(id))?.length;
+  }
+
   public async create(
     createProductDefinitionDto: CreateProductDefinitionDto,
   ): Promise<ProductDefinition> {
-    const productDefinition = new ProductDefinition();
-    productDefinition.sku = createProductDefinitionDto.sku;
-    productDefinition.name = createProductDefinitionDto.name;
-    productDefinition.description = createProductDefinitionDto.description;
-    productDefinition.listPrice = createProductDefinitionDto.listPrice;
+    let productDefinition = new ProductDefinition();
+    productDefinition = { ...productDefinition, ...createProductDefinitionDto };
 
     return await this.productDefinitionsRepository.save(productDefinition);
   }
@@ -40,17 +51,12 @@ export class ProductDefinitionsService {
     id: string,
     updateProductDefinitionDto: UpdateProductDefinitionDto,
   ): Promise<UpdateResult> {
-    const productDefinition = await this.productDefinitionsRepository.findOne(
-      id,
-    );
+    let productDefinition = await this.productDefinitionsRepository.findOne(id);
     if (!productDefinition) {
       throw new NotFoundException();
     }
 
-    productDefinition.sku = updateProductDefinitionDto.sku;
-    productDefinition.name = updateProductDefinitionDto.name;
-    productDefinition.description = updateProductDefinitionDto.description;
-    productDefinition.listPrice = updateProductDefinitionDto.listPrice;
+    productDefinition = { ...productDefinition, ...updateProductDefinitionDto };
 
     return await this.productDefinitionsRepository.update(
       id,
