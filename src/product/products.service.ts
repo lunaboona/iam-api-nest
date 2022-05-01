@@ -1,13 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Movement } from 'src/movement/entities/movement.entity';
 import { ProductDefinitionsService } from 'src/product-definitions/product-definitions.service';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 
 @Injectable()
@@ -17,6 +13,15 @@ export class ProductsService {
     public productsRepository: Repository<Product>,
     private productDefinitionsService: ProductDefinitionsService,
   ) {}
+
+  public async getMovements(id: string): Promise<Movement[]> {
+    const productWithMovements = this.productsRepository
+      .createQueryBuilder('product')
+      .where('product.id = :id', { id })
+      .leftJoinAndSelect('product.movements', 'movement')
+      .getOne();
+    return (await productWithMovements).movements;
+  }
 
   public validateProductExpiration(product: Product): boolean {
     const expiration = new Date(product.expirationDate);
@@ -42,34 +47,5 @@ export class ProductsService {
 
   public async findOne(id: string): Promise<Product> {
     return await this.productsRepository.findOne(id);
-  }
-
-  public async update(
-    id: string,
-    updateProductDto: UpdateProductDto,
-  ): Promise<Product> {
-    let product = await this.productsRepository.findOne(id);
-    if (!product) {
-      throw new NotFoundException();
-    }
-
-    const productDefinition = await this.productDefinitionsService.findOne(
-      updateProductDto.productDefinitionId,
-    );
-    if (!productDefinition) {
-      throw new BadRequestException('Product definition does not exist');
-    }
-
-    product = { ...product, ...updateProductDto };
-    return await this.productsRepository.save(product);
-  }
-
-  public async remove(id: string): Promise<void> {
-    const warehouse = await this.productsRepository.findOne(id);
-    if (!warehouse) {
-      throw new NotFoundException();
-    }
-    await this.productsRepository.delete(warehouse);
-    return;
   }
 }
