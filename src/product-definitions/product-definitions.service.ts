@@ -58,7 +58,6 @@ export class ProductDefinitionsService {
 
     productDefinition = { ...productDefinition, ...updateProductDefinitionDto };
 
-    await this.productDefinitionsRepository.update(id, productDefinition);
-    return productDefinition;
+    return await this.productDefinitionsRepository.save(productDefinition);
   }
 }
