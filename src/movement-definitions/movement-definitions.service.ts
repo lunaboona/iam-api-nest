@@ -28,6 +28,10 @@ export class MovementDefinitionsService {
       throw new BadRequestException('Document type does not exist');
     }
 
+    if (!documentType.active) {
+      throw new BadRequestException('Document type is not active');
+    }
+
     if (
       createMovementDefinitionDto.isLoss &&
       createMovementDefinitionDto.nature !== MovementNature.Outgoing
