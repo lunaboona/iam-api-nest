@@ -27,7 +27,7 @@ export class MovementsController {
   }
 
   @Get(':id/unit-price')
-  getProductAmount(@Param('id') id: string) {
+  getUnitPrice(@Param('id') id: string) {
     return this.movementsService.getUnitPrice(id);
   }
 }
