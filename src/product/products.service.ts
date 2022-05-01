@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Movement } from 'src/movement/entities/movement.entity';
 import { ProductDefinitionsService } from 'src/product-definitions/product-definitions.service';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -12,6 +13,15 @@ export class ProductsService {
     public productsRepository: Repository<Product>,
     private productDefinitionsService: ProductDefinitionsService,
   ) {}
+
+  public async getMovements(id: string): Promise<Movement[]> {
+    const productWithMovements = this.productsRepository
+      .createQueryBuilder('product')
+      .where('product.id = :id', { id })
+      .leftJoinAndSelect('product.movements', 'movement')
+      .getOne();
+    return (await productWithMovements).movements;
+  }
 
   public validateProductExpiration(product: Product): boolean {
     const expiration = new Date(product.expirationDate);
