@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProductDefinitionsService } from 'src/product-definitions/product-definitions.service';
-import { WarehousesService } from 'src/warehouses/warehouses.service';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Product } from './entities/product.entity';
@@ -10,9 +9,8 @@ import { Product } from './entities/product.entity';
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
-    private productsRepository: Repository<Product>,
+    public productsRepository: Repository<Product>,
     private productDefinitionsService: ProductDefinitionsService,
-    private warehouseService: WarehousesService,
   ) {}
 
   public validateProductExpiration(product: Product): boolean {
@@ -28,13 +26,6 @@ export class ProductsService {
     );
     if (!productDefinition) {
       throw new BadRequestException('Product definition does not exist');
-    }
-
-    const warehouse = await this.warehouseService.findOne(
-      createProductDto.warehouseId,
-    );
-    if (!warehouse) {
-      throw new BadRequestException('Warehouse does not exist');
     }
 
     return await this.productsRepository.save(createProductDto);

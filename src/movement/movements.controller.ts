@@ -20,4 +20,14 @@ export class MovementsController {
   findOne(@Param('id') id: string) {
     return this.movementsService.findOne(id);
   }
+
+  @Get(':id/products')
+  getProducts(@Param('id') id: string) {
+    return this.movementsService.getProducts(id);
+  }
+
+  @Get(':id/unit-price')
+  getUnitPrice(@Param('id') id: string) {
+    return this.movementsService.getUnitPrice(id);
+  }
 }
