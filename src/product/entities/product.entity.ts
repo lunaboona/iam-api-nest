@@ -34,7 +34,7 @@ export class Product {
   @JoinColumn({ name: 'productDefinitionId' })
   productDefinition: ProductDefinition;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   warehouseId: string;
 
   @ManyToOne(() => Warehouse, (warehouse) => warehouse.products)

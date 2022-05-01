@@ -3,5 +3,4 @@ export class CreateProductDto {
   manifacturingDate: string;
   batch: string;
   productDefinitionId: string;
-  warehouseId: string;
 }

@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { MovementNature } from 'src/movement-definitions/enum/movement-nature.enum';
 import { MovementDefinitionsService } from 'src/movement-definitions/movement-definitions.service';
 import { Product } from 'src/product/entities/product.entity';
 import { ProductsService } from 'src/product/products.service';
@@ -51,15 +52,25 @@ export class MovementsService {
       throw new BadRequestException('Movement definition does not exist');
     }
 
-    const warehouse = await this.warehouseService.findOne(
-      createMovementDto.warehouseId,
-    );
-    if (!warehouse) {
-      throw new BadRequestException('Warehouse does not exist');
+    if (movementDefinition.nature === MovementNature.Incoming) {
+      if (!createMovementDto.warehouseId) {
+        throw new BadRequestException(
+          'Warehouse ID must be provided for movements of Incoming nature',
+        );
+      }
+      const warehouse = await this.warehouseService.findOne(
+        createMovementDto.warehouseId,
+      );
+      if (!warehouse) {
+        throw new BadRequestException('Warehouse does not exist');
+      }
+    } else {
+      createMovementDto.warehouseId = null;
     }
 
     const products: Product[] = [];
-    const productIds = createMovementDto.productIds;
+    // Remove duplicates
+    const productIds = [...new Set(createMovementDto.productIds)];
 
     if (productIds.length === 0) {
       throw new BadRequestException(`Movement must have at least one product`);
@@ -73,10 +84,23 @@ export class MovementsService {
         );
       }
 
-      // TODO product cant have warehouseId if incoming
-      // TODO add product warehouseId if incoming
-      // TODO remove product warehouseId if outgoing
-      // TODO filter productIds to remove duplicates
+      if (
+        movementDefinition.nature === MovementNature.Incoming &&
+        product.warehouseId
+      ) {
+        throw new BadRequestException(
+          `Product with id ${productId} can't be processed because movement nature is Incoming and product is already in a warehouse`,
+        );
+      }
+
+      if (
+        movementDefinition.nature === MovementNature.Outgoing &&
+        !product.warehouseId
+      ) {
+        throw new BadRequestException(
+          `Product with id ${productId} can't be processed because movement nature is Outgoing and product is not in a warehouse`,
+        );
+      }
 
       if (
         this.productService.validateProductExpiration(product) &&
@@ -90,9 +114,13 @@ export class MovementsService {
       products.push(product);
     }
 
+    for (const product of products) {
+      product.warehouseId = createMovementDto.warehouseId;
+      this.productService.productsRepository.save(product);
+    }
+
     const movement = new Movement();
     movement.fillFields(createMovementDto, products);
-
     return await this.movementsRepository.save(movement);
   }
 

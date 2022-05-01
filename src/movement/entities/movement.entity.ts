@@ -33,7 +33,7 @@ export class Movement {
   @JoinColumn({ name: 'movementDefinitionId' })
   movementDefinition: MovementDefinition;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   warehouseId: string;
 
   @ManyToOne(() => Warehouse)
