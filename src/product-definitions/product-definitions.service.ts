@@ -50,7 +50,7 @@ export class ProductDefinitionsService {
   public async update(
     id: string,
     updateProductDefinitionDto: UpdateProductDefinitionDto,
-  ): Promise<UpdateResult> {
+  ): Promise<ProductDefinition> {
     let productDefinition = await this.productDefinitionsRepository.findOne(id);
     if (!productDefinition) {
       throw new NotFoundException();
@@ -58,20 +58,7 @@ export class ProductDefinitionsService {
 
     productDefinition = { ...productDefinition, ...updateProductDefinitionDto };
 
-    return await this.productDefinitionsRepository.update(
-      id,
-      productDefinition,
-    );
-  }
-
-  public async remove(id: string): Promise<void> {
-    const productDefinition = await this.productDefinitionsRepository.findOne(
-      id,
-    );
-    if (!productDefinition) {
-      throw new NotFoundException();
-    }
-    await this.productDefinitionsRepository.delete(productDefinition);
-    return;
+    await this.productDefinitionsRepository.update(id, productDefinition);
+    return productDefinition;
   }
 }
