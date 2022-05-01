@@ -9,8 +9,5 @@ export class DocumentType {
   name: string;
 
   @Column()
-  mask: string;
-
-  @Column()
   active: boolean;
 }
