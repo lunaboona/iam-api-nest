@@ -1,15 +1,6 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-  Put,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { MovementDefinitionsService } from './movement-definitions.service';
 import { CreateMovementDefinitionDto } from './dto/create-movement-definition.dto';
-import { UpdateMovementDefinitionDto } from './dto/update-movement-definition.dto';
 
 @Controller('movement-definitions')
 export class MovementDefinitionsController {
@@ -32,19 +23,13 @@ export class MovementDefinitionsController {
     return this.movementDefinitionsService.findOne(id);
   }
 
-  @Put(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateMovementDefinitionDto: UpdateMovementDefinitionDto,
-  ) {
-    return this.movementDefinitionsService.update(
-      id,
-      updateMovementDefinitionDto,
-    );
+  @Patch(':id/set-as-active')
+  setAsActive(@Param(':id') id: string) {
+    return this.movementDefinitionsService.setAsActive(id);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.movementDefinitionsService.remove(id);
+  @Patch(':id/set-as-inactive')
+  setAsInactive(@Param(':id') id: string) {
+    return this.movementDefinitionsService.setAsInactive(id);
   }
 }

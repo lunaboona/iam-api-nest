@@ -10,4 +10,7 @@ export class DocumentType {
 
   @Column()
   mask: string;
+
+  @Column()
+  active: boolean;
 }

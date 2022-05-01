@@ -1,5 +1,4 @@
 import { DocumentType } from 'src/document-types/entities/document-type.entity';
-import { MovementType } from 'src/movement-types/entities/movement-type.entity';
 import {
   Column,
   Entity,
@@ -7,6 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { MovementNature } from '../enum/movement-nature.enum';
 
 @Entity()
 export class MovementDefinition {
@@ -23,10 +23,16 @@ export class MovementDefinition {
   @JoinColumn({ name: 'documentTypeId' })
   documentType: DocumentType;
 
-  @Column({ type: 'uuid' })
-  movementTypeId: string;
+  @Column({
+    type: 'enum',
+    enum: MovementNature,
+    default: MovementNature.Incoming,
+  })
+  nature: MovementNature;
 
-  @ManyToOne(() => MovementType)
-  @JoinColumn({ name: 'movementTypeId' })
-  movementType: MovementType;
+  @Column()
+  isLoss: boolean;
+
+  @Column()
+  active: boolean;
 }

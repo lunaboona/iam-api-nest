@@ -5,11 +5,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DocumentTypesService } from 'src/document-types/document-types.service';
-import { MovementTypesService } from 'src/movement-types/movement-types.service';
-import { Repository, UpdateResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateMovementDefinitionDto } from './dto/create-movement-definition.dto';
-import { UpdateMovementDefinitionDto } from './dto/update-movement-definition.dto';
 import { MovementDefinition } from './entities/movement-definition.entity';
+import { MovementNature } from './enum/movement-nature.enum';
 
 @Injectable()
 export class MovementDefinitionsService {
@@ -17,7 +16,6 @@ export class MovementDefinitionsService {
     @InjectRepository(MovementDefinition)
     private movementDefinitionsRepository: Repository<MovementDefinition>,
     private documentTypesService: DocumentTypesService,
-    private movementTypesService: MovementTypesService,
   ) {}
 
   public async create(
@@ -30,19 +28,21 @@ export class MovementDefinitionsService {
       throw new BadRequestException('Document type does not exist');
     }
 
-    const movementType = await this.movementTypesService.findOne(
-      createMovementDefinitionDto.movementTypeId,
-    );
-    if (!movementType) {
-      throw new BadRequestException('Movement type does not exist');
+    if (
+      createMovementDefinitionDto.isLoss &&
+      createMovementDefinitionDto.nature !== MovementNature.Outgoing
+    ) {
+      throw new BadRequestException(
+        'Movement definition can only be defined as a loss if movement nature is outgoing',
+      );
     }
 
-    const movementDefinition = new MovementDefinition();
-    movementDefinition.name = createMovementDefinitionDto.name;
-    movementDefinition.documentTypeId =
-      createMovementDefinitionDto.documentTypeId;
-    movementDefinition.movementTypeId =
-      createMovementDefinitionDto.movementTypeId;
+    let movementDefinition = new MovementDefinition();
+    movementDefinition = {
+      ...movementDefinition,
+      ...createMovementDefinitionDto,
+      active: true,
+    };
 
     return await this.movementDefinitionsRepository.save(movementDefinition);
   }
@@ -55,51 +55,25 @@ export class MovementDefinitionsService {
     return await this.movementDefinitionsRepository.findOne(id);
   }
 
-  public async update(
-    id: string,
-    updateMovementDefinitionDto: UpdateMovementDefinitionDto,
-  ): Promise<UpdateResult> {
-    const movementDefinition = await this.movementDefinitionsRepository.findOne(
-      id,
-    );
-    if (!movementDefinition) {
-      throw new NotFoundException();
-    }
-
-    const documentType = await this.documentTypesService.findOne(
-      updateMovementDefinitionDto.documentTypeId,
-    );
-    if (!documentType) {
-      throw new BadRequestException('Document type does not exist');
-    }
-
-    const movementType = await this.movementTypesService.findOne(
-      updateMovementDefinitionDto.movementTypeId,
-    );
-    if (!movementType) {
-      throw new BadRequestException('Movement type does not exist');
-    }
-
-    movementDefinition.name = updateMovementDefinitionDto.name;
-    movementDefinition.documentTypeId =
-      updateMovementDefinitionDto.documentTypeId;
-    movementDefinition.movementTypeId =
-      updateMovementDefinitionDto.movementTypeId;
-
-    return await this.movementDefinitionsRepository.update(
-      id,
-      movementDefinition,
-    );
+  public async setAsActive(id: string): Promise<MovementDefinition> {
+    return this.setActiveState(id, true);
   }
 
-  public async remove(id: string): Promise<void> {
-    const movementDefinition = await this.movementDefinitionsRepository.findOne(
-      id,
-    );
-    if (!movementDefinition) {
+  public async setAsInactive(id: string): Promise<MovementDefinition> {
+    return this.setActiveState(id, false);
+  }
+
+  private async setActiveState(
+    id: string,
+    state: boolean,
+  ): Promise<MovementDefinition> {
+    const movementType = await this.movementDefinitionsRepository.findOne(id);
+    if (!movementType) {
       throw new NotFoundException();
     }
-    await this.movementDefinitionsRepository.delete(movementDefinition);
-    return;
+
+    movementType.active = state;
+
+    return await this.movementDefinitionsRepository.save(movementType);
   }
 }
