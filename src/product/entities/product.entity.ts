@@ -17,7 +17,7 @@ export class Product {
   expirationDate: string;
 
   @Column({ type: 'date' })
-  manifacturingDate: string;
+  manufacturingDate: string;
 
   @Column()
   batch: string;
@@ -25,7 +25,10 @@ export class Product {
   @Column({ type: 'uuid' })
   productDefinitionId: string;
 
-  @ManyToOne(() => ProductDefinition)
+  @ManyToOne(
+    () => ProductDefinition,
+    (productDefinition) => productDefinition.products,
+  )
   @JoinColumn({ name: 'productDefinitionId' })
   productDefinition: ProductDefinition;
 

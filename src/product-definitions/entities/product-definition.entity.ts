@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Product } from 'src/product/entities/product.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class ProductDefinition {
@@ -16,4 +17,7 @@ export class ProductDefinition {
 
   @Column({ type: 'decimal', scale: 2, precision: 10 })
   listPrice: number;
+
+  @OneToMany(() => Product, (product) => product.productDefinition)
+  products: Product[];
 }

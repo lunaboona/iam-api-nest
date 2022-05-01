@@ -43,8 +43,13 @@ export class ProductDefinitionsController {
     );
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productDefinitionsService.remove(id);
+  @Get(':id/products')
+  getProducts(@Param('id') id: string) {
+    return this.productDefinitionsService.getProducts(id);
+  }
+
+  @Get(':id/product-amount')
+  getProductAmount(@Param('id') id: string) {
+    return this.productDefinitionsService.getProductAmount(id);
   }
 }
