@@ -20,6 +20,13 @@ export class ProductsService {
     private warehouseService: WarehousesService,
   ) {}
 
+  public validateProductExpiration(product: Product): boolean {
+    const expiration = new Date(product.expirationDate);
+    const today = new Date();
+
+    return expiration.getTime() <= today.getTime();
+  }
+
   public async create(createProductDto: CreateProductDto): Promise<Product> {
     const productDefinition = await this.productDefinitionsService.findOne(
       createProductDto.productDefinitionId,
