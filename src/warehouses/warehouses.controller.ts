@@ -6,6 +6,7 @@ import {
   Param,
   Put,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
@@ -38,8 +39,13 @@ export class WarehousesController {
     return this.warehousesService.update(id, updateWarehouseDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.warehousesService.remove(id);
+  @Patch(':id/set-as-active')
+  setAsActive(@Param(':id') id: string) {
+    return this.warehousesService.setAsActive(id);
+  }
+
+  @Patch(':id/set-as-inactive')
+  setAsInactive(@Param(':id') id: string) {
+    return this.warehousesService.setAsInactive(id);
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Warehouse } from './entities/warehouse.entity';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
@@ -43,12 +43,22 @@ export class WarehousesService {
     return await this.warehousesRepository.save(warehouse);
   }
 
-  public async remove(id: string): Promise<void> {
+  public async setAsActive(id: string): Promise<Warehouse> {
+    return this.setActiveState(id, true);
+  }
+
+  public async setAsInactive(id: string): Promise<Warehouse> {
+    return this.setActiveState(id, false);
+  }
+
+  private async setActiveState(id: string, state: boolean): Promise<Warehouse> {
     const warehouse = await this.warehousesRepository.findOne(id);
     if (!warehouse) {
       throw new NotFoundException();
     }
-    await this.warehousesRepository.delete(warehouse);
-    return;
+
+    warehouse.active = state;
+
+    return await this.warehousesRepository.save(warehouse);
   }
 }
