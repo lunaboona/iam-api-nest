@@ -10,6 +10,7 @@ import { DocumentTypesModule } from './document-types/document-types.module';
 import { MovementDefinitionsModule } from './movement-definitions/movement-definitions.module';
 import { ProductDefinitionsModule } from './product-definitions/product-definitions.module';
 import { WarehousesModule } from './warehouses/warehouses.module';
+import { ProductsModule } from './product/products.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     MovementDefinitionsModule,
     ProductDefinitionsModule,
     WarehousesModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
