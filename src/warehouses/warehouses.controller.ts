@@ -31,6 +31,19 @@ export class WarehousesController {
     return this.warehousesService.findOne(id);
   }
 
+  @Get(':id/products')
+  getProducts(@Param('id') id: string) {
+    return this.warehousesService.getProducts(id);
+  }
+
+  @Get(':id/product-amount/:productDefinitionId')
+  getProductAmount(
+    @Param('id') id: string,
+    @Param('productDefinitionId') productDefinitionId: string,
+  ) {
+    return this.warehousesService.getProductAmount(id, productDefinitionId);
+  }
+
   @Put(':id')
   update(
     @Param('id') id: string,
