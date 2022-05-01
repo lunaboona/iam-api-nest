@@ -19,7 +19,7 @@ export class MovementsService {
     @InjectRepository(Movement)
     private movementsRepository: Repository<Movement>,
     private movementDefinitionsService: MovementDefinitionsService,
-    private warehouseService: WarehousesService,
+    private warehousesService: WarehousesService,
     private productService: ProductsService,
   ) {}
 
@@ -52,17 +52,25 @@ export class MovementsService {
       throw new BadRequestException('Movement definition does not exist');
     }
 
+    if (!movementDefinition.active) {
+      throw new BadRequestException('Movement definition is not active');
+    }
+
     if (movementDefinition.nature === MovementNature.Incoming) {
       if (!createMovementDto.warehouseId) {
         throw new BadRequestException(
           'Warehouse ID must be provided for movements of Incoming nature',
         );
       }
-      const warehouse = await this.warehouseService.findOne(
+      const warehouse = await this.warehousesService.findOne(
         createMovementDto.warehouseId,
       );
       if (!warehouse) {
         throw new BadRequestException('Warehouse does not exist');
+      }
+
+      if (!warehouse.active) {
+        throw new BadRequestException('Warehouse is not active');
       }
     } else {
       createMovementDto.warehouseId = null;
