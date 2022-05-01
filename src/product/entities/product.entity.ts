@@ -1,9 +1,11 @@
+import { Movement } from 'src/movement/entities/movement.entity';
 import { ProductDefinition } from 'src/product-definitions/entities/product-definition.entity';
 import { Warehouse } from 'src/warehouses/entities/warehouse.entity';
 import {
   Column,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -32,10 +34,13 @@ export class Product {
   @JoinColumn({ name: 'productDefinitionId' })
   productDefinition: ProductDefinition;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   warehouseId: string;
 
   @ManyToOne(() => Warehouse, (warehouse) => warehouse.products)
   @JoinColumn({ name: 'warehouseId' })
   warehouse: Warehouse;
+
+  @ManyToMany(() => Movement, (movement) => movement.products)
+  movements: Movement[];
 }

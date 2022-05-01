@@ -33,14 +33,14 @@ export class Movement {
   @JoinColumn({ name: 'movementDefinitionId' })
   movementDefinition: MovementDefinition;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   warehouseId: string;
 
   @ManyToOne(() => Warehouse)
   @JoinColumn({ name: 'warehouseId' })
   warehouse: Warehouse;
 
-  @ManyToMany(() => Product)
+  @ManyToMany(() => Product, (product) => product.movements)
   @JoinTable()
   products: Product[];
 
