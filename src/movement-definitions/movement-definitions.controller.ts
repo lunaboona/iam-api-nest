@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Query,
+} from '@nestjs/common';
 import { MovementDefinitionsService } from './movement-definitions.service';
 import { CreateMovementDefinitionDto } from './dto/create-movement-definition.dto';
 
@@ -14,13 +22,13 @@ export class MovementDefinitionsController {
   }
 
   @Get()
-  findAll() {
-    return this.movementDefinitionsService.findAll();
+  findAll(@Query('expand') expand: string) {
+    return this.movementDefinitionsService.findAll(expand === 'true');
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.movementDefinitionsService.findOne(id);
+  findOne(@Param('id') id: string, @Query('expand') expand: string) {
+    return this.movementDefinitionsService.findOne(id, expand === 'true');
   }
 
   @Patch(':id/set-as-active')

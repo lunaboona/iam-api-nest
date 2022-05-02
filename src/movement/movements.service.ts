@@ -132,11 +132,19 @@ export class MovementsService {
     return await this.movementsRepository.save(movement);
   }
 
-  public async findAll(): Promise<Movement[]> {
-    return await this.movementsRepository.find();
+  public async findAll(expand: boolean = false): Promise<Movement[]> {
+    let relations = [];
+    if (expand) {
+      relations = ['movementDefinition', 'warehouse', 'products'];
+    }
+    return await this.movementsRepository.find({ relations });
   }
 
-  public async findOne(id: string): Promise<Movement> {
-    return await this.movementsRepository.findOne(id);
+  public async findOne(id: string, expand: boolean = false): Promise<Movement> {
+    let relations = [];
+    if (expand) {
+      relations = ['movementDefinition', 'warehouse', 'products'];
+    }
+    return await this.movementsRepository.findOne(id, { relations });
   }
 }

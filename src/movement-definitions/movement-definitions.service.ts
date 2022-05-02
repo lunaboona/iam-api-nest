@@ -51,12 +51,23 @@ export class MovementDefinitionsService {
     return await this.movementDefinitionsRepository.save(movementDefinition);
   }
 
-  public async findAll(): Promise<MovementDefinition[]> {
-    return await this.movementDefinitionsRepository.find();
+  public async findAll(expand: boolean = false): Promise<MovementDefinition[]> {
+    const relations = [];
+    if (expand) {
+      relations.push('documentType');
+    }
+    return await this.movementDefinitionsRepository.find({ relations });
   }
 
-  public async findOne(id: string): Promise<MovementDefinition> {
-    return await this.movementDefinitionsRepository.findOne(id);
+  public async findOne(
+    id: string,
+    expand: boolean = false,
+  ): Promise<MovementDefinition> {
+    const relations = [];
+    if (expand) {
+      relations.push('documentType');
+    }
+    return await this.movementDefinitionsRepository.findOne(id, { relations });
   }
 
   public async setAsActive(id: string): Promise<MovementDefinition> {

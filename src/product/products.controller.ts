@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Param } from '@nestjs/common';
+import { Body, Controller, Post, Get, Param, Query } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductsService } from './products.service';
 
@@ -12,13 +12,13 @@ export class ProductsController {
   }
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query('expand') expand: string) {
+    return this.productsService.findAll(expand === 'true');
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productsService.findOne(id);
+  findOne(@Param('id') id: string, @Query('expand') expand: string) {
+    return this.productsService.findOne(id, expand === 'true');
   }
 
   @Get(':id/movements')

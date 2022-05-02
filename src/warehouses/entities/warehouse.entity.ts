@@ -1,3 +1,4 @@
+import { Movement } from 'src/movement/entities/movement.entity';
 import { Product } from 'src/product/entities/product.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -11,6 +12,9 @@ export class Warehouse {
 
   @OneToMany(() => Product, (product) => product.warehouse)
   products: Product[];
+
+  @OneToMany(() => Movement, (movement) => movement.warehouse)
+  movements: Movement[];
 
   @Column()
   active: boolean;
