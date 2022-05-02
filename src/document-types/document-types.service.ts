@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateDocumentTypeDto } from './dto/create-document-type.dto';
 import { DocumentType } from './entities/document-type.entity';
+import IMask from 'imask';
 
 @Injectable()
 export class DocumentTypesService {
@@ -48,5 +49,20 @@ export class DocumentTypesService {
     documentType.active = state;
 
     return await this.documentTypesRepository.save(documentType);
+  }
+
+  public validateMask(documentType: DocumentType, document: string): boolean {
+    if (!documentType.mask) return true;
+
+    let mask = new IMask.MaskedPattern({
+      mask: documentType.mask,
+    });
+
+    mask.unmaskedValue = document;
+    if (!mask.isComplete) {
+      return false;
+    }
+
+    return mask.resolve(document) === document;
   }
 }
