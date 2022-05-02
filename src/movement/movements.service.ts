@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { DocumentTypesService } from 'src/document-types/document-types.service';
 import { MovementNature } from 'src/movement-definitions/enum/movement-nature.enum';
 import { MovementDefinitionsService } from 'src/movement-definitions/movement-definitions.service';
 import { Product } from 'src/product/entities/product.entity';
@@ -21,6 +22,7 @@ export class MovementsService {
     private movementDefinitionsService: MovementDefinitionsService,
     private warehousesService: WarehousesService,
     private productService: ProductsService,
+    private documentTypesService: DocumentTypesService,
   ) {}
 
   public async getProducts(id: string): Promise<Product[]> {
@@ -47,6 +49,7 @@ export class MovementsService {
   public async create(createMovementDto: CreateMovementDto): Promise<Movement> {
     const movementDefinition = await this.movementDefinitionsService.findOne(
       createMovementDto.movementDefinitionId,
+      true,
     );
     if (!movementDefinition) {
       throw new BadRequestException('Movement definition does not exist');
@@ -54,6 +57,15 @@ export class MovementsService {
 
     if (!movementDefinition.active) {
       throw new BadRequestException('Movement definition is not active');
+    }
+
+    if (
+      !this.documentTypesService.validateMask(
+        movementDefinition.documentType,
+        createMovementDto.document,
+      )
+    ) {
+      throw new BadRequestException('Document does not match document mask');
     }
 
     if (movementDefinition.nature === MovementNature.Incoming) {

@@ -6,6 +6,7 @@ import { Movement } from './entities/movement.entity';
 import { MovementDefinitionsModule } from 'src/movement-definitions/movement-definitions.module';
 import { WarehousesModule } from 'src/warehouses/warehouses.module';
 import { ProductsModule } from 'src/product/products.module';
+import { DocumentTypesModule } from 'src/document-types/document-types.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ProductsModule } from 'src/product/products.module';
     MovementDefinitionsModule,
     WarehousesModule,
     ProductsModule,
+    DocumentTypesModule,
   ],
   controllers: [MovementsController],
   providers: [MovementsService],
