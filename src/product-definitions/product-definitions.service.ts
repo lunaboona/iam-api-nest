@@ -27,7 +27,7 @@ export class ProductDefinitionsService {
   }
 
   public async getProductAmount(id: string): Promise<number> {
-    return (await this.getProducts(id))?.length;
+    return (await this.getProducts(id))?.filter((p) => !!p.warehouseId)?.length;
   }
 
   public async create(
