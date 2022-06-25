@@ -11,19 +11,28 @@ import { ProductDefinitionsModule } from './wms/product-definitions/product-defi
 import { WarehousesModule } from './wms/warehouses/warehouses.module';
 import { ProductsModule } from './wms/product/products.module';
 import { MovementsModule } from './wms/movement/movements.module';
+import { AccountsModule } from './accounting/accounts/accounts.module';
+import { TransactionMappingsModule } from './accounting/transaction-mappings/transaction-mappings.module';
+import { TransactionsModule } from './accounting/transactions/transactions.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
+    // IAM
     UsersModule,
     OperationsModule,
     ModulesModule,
+    // WMS
     DocumentTypesModule,
     MovementDefinitionsModule,
     ProductDefinitionsModule,
     WarehousesModule,
     ProductsModule,
     MovementsModule,
+    // Accounting
+    AccountsModule,
+    TransactionMappingsModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
