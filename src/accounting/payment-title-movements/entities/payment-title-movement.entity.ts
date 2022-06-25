@@ -1,3 +1,4 @@
+import { PaymentMethod } from 'src/accounting/payment-methods/entities/payment-method.entity';
 import { PaymentTitle } from 'src/accounting/payment-titles/entities/payment-title.entity';
 import { TransactionMapping } from 'src/accounting/transaction-mappings/entities/transaction-mapping.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
@@ -21,9 +22,6 @@ export class PaymentTitleMovement {
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   paidValue: number;
 
-  @Column()
-  paymentMethod: string;
-
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   interestValue: number;
 
@@ -43,4 +41,11 @@ export class PaymentTitleMovement {
   @ManyToOne(() => TransactionMapping)
   @JoinColumn({ name: 'transactionMappingId' })
   transactionMapping: TransactionMapping;
+
+  @Column({ type: 'uuid' })
+  paymentMethodId: string;
+
+  @ManyToOne(() => PaymentMethod)
+  @JoinColumn({ name: 'paymentMethodId' })
+  paymentMethod: PaymentMethod;
 }
