@@ -1,5 +1,5 @@
-import { Account } from 'src/accounting/account/entities/account.entity';
-import { Transaction } from 'src/accounting/transaction/entities/transaction.entity';
+import { Account } from 'src/accounting/accounts/entities/account.entity';
+import { Transaction } from 'src/accounting/transactions/entities/transaction.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { TransactionMethod } from '../enum/transaction-method.enum';
 
