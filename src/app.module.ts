@@ -2,15 +2,15 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { OperationsModule } from './operations/operations.module';
-import { ModulesModule } from './modules/modules.module';
-import { DocumentTypesModule } from './document-types/document-types.module';
-import { MovementDefinitionsModule } from './movement-definitions/movement-definitions.module';
-import { ProductDefinitionsModule } from './product-definitions/product-definitions.module';
-import { WarehousesModule } from './warehouses/warehouses.module';
-import { ProductsModule } from './product/products.module';
-import { MovementsModule } from './movement/movements.module';
+import { UsersModule } from './iam/users/users.module';
+import { OperationsModule } from './iam/operations/operations.module';
+import { ModulesModule } from './iam/modules/modules.module';
+import { DocumentTypesModule } from './wms/document-types/document-types.module';
+import { MovementDefinitionsModule } from './wms/movement-definitions/movement-definitions.module';
+import { ProductDefinitionsModule } from './wms/product-definitions/product-definitions.module';
+import { WarehousesModule } from './wms/warehouses/warehouses.module';
+import { ProductsModule } from './wms/product/products.module';
+import { MovementsModule } from './wms/movement/movements.module';
 
 @Module({
   imports: [
