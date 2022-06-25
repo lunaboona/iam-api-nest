@@ -22,7 +22,7 @@ export class AccountsService {
     return await this.accountsRepository.find();
   }
 
-  public async findOne(id: string): Promise<Account> {
-    return await this.accountsRepository.findOne(id);
+  public async findOne(code: string): Promise<Account> {
+    return await this.accountsRepository.findOne(code);
   }
 }
