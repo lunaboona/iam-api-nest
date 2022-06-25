@@ -14,6 +14,7 @@ import { MovementsModule } from './wms/movement/movements.module';
 import { AccountsModule } from './accounting/accounts/accounts.module';
 import { TransactionMappingsModule } from './accounting/transaction-mappings/transaction-mappings.module';
 import { TransactionsModule } from './accounting/transactions/transactions.module';
+import { PaymentTitlesModule } from './accounting/payment-mappings/payment-titles.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TransactionsModule } from './accounting/transactions/transactions.modul
     MovementsModule,
     // Accounting
     AccountsModule,
+    PaymentTitlesModule,
     TransactionMappingsModule,
     TransactionsModule,
   ],
