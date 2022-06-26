@@ -8,6 +8,12 @@ export class TransactionMapping {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ type: 'datetime' })
+  date: Date;
+
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  value: number;
+
   @Column()
   transactionCode: string;
 

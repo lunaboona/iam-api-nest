@@ -3,5 +3,7 @@ import { CreateIssuingMovementDto } from 'src/accounting/payment-title-movements
 export class CreatePurchaseDto {
   transactionCode?: string;
   transactionName?: string;
+  date?: Date;
+  value?: number;
   paymentTitle?: CreateIssuingMovementDto;
 }

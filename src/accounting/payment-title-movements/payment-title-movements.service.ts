@@ -35,7 +35,7 @@ export class PaymentTitleMovementsService {
       throw new BadRequestException();
     }
 
-    const transactionMapping = this.transactionMappingsService.findOne(dto.transactionMappingId);
+    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
       throw new NotFoundException();
     }
@@ -77,7 +77,7 @@ export class PaymentTitleMovementsService {
       throw new BadRequestException();
     }
 
-    const transactionMapping = this.transactionMappingsService.findOne(dto.transactionMappingId);
+    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
       throw new NotFoundException();
     }
@@ -111,7 +111,7 @@ export class PaymentTitleMovementsService {
       throw new BadRequestException();
     }
 
-    const transactionMapping = this.transactionMappingsService.findOne(dto.transactionMappingId);
+    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
       throw new NotFoundException();
     }
@@ -159,7 +159,7 @@ export class PaymentTitleMovementsService {
       throw new BadRequestException();
     }
 
-    const transactionMapping = this.transactionMappingsService.findOne(dto.transactionMappingId);
+    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
       throw new NotFoundException();
     }

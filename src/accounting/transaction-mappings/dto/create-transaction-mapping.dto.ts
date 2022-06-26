@@ -4,4 +4,6 @@ export class CreateTransactionMappingDto {
   transactionCode: string;
   accountCode: string;
   method: TransactionMethod;
+  date: Date;
+  value: number;
 }

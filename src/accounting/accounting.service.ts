@@ -27,17 +27,23 @@ export class AccountingService {
     const titleMapping = await this.transactionMappingsService.create({
       transactionCode: dto.transactionCode,
       method: TransactionMethod.Debit,
-      accountCode: paymentTitleAccountCode
+      accountCode: paymentTitleAccountCode,
+      date: dto.date,
+      value: dto.value
     });
 
     const merchandiseMapping = await this.transactionMappingsService.create({
       transactionCode: dto.transactionCode,
       method: TransactionMethod.Debit,
-      accountCode: merchandiseAccountCode
+      accountCode: merchandiseAccountCode,
+      date: dto.date,
+      value: dto.value
     });
 
     const paymentTitleMovement = await this.paymentTitleMovementsService.createIssuingMovement({
       ...dto.paymentTitle,
+      issuingDate: dto.date,
+      value: dto.value,
       transactionMappingId: titleMapping.id
     });
 

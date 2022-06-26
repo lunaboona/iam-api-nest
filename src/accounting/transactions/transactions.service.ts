@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -11,9 +11,17 @@ export class TransactionsService {
     private transactionsRepository: Repository<Transaction>,
   ) {}
 
-  public async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
+  public async create(dto: CreateTransactionDto): Promise<Transaction> {
+    if (!dto.code) {
+      throw new BadRequestException();
+    }
+
+    if (await this.findOne(dto.code)) {
+      throw new ConflictException();
+    }
+
     let transaction = new Transaction();
-    transaction = { ...transaction, ...createTransactionDto };
+    transaction = { ...transaction, ...dto };
 
     return await this.transactionsRepository.save(transaction);
   }
