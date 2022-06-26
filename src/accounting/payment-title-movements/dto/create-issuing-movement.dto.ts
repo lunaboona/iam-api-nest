@@ -5,4 +5,5 @@ export class CreateIssuingMovementDto {
   value: number;
   payer: string;
   recipient: string;
+  transactionMappingId: string;
 }

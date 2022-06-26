@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 import { PaymentTitleStatus } from '../payment-titles/enum/payment-title-status.enum';
 import { PaymentTitlesService } from '../payment-titles/payment-titles.service';
+import { TransactionMappingsService } from '../transaction-mappings/transaction-mappings.service';
 import { CreateCancellationMovementDto } from './dto/create-cancellation-movement.dto';
 import { CreateIssuingMovementDto } from './dto/create-issuing-movement.dto';
 import { CreatePaymentMovementDto } from './dto/create-payment-movement.dto';
@@ -19,11 +20,12 @@ export class PaymentTitleMovementsService {
     private paymentTitleMovementsRepository: Repository<PaymentTitleMovement>,
     private paymentTitlesService: PaymentTitlesService,
     private paymentMethodsService: PaymentMethodsService,
+    private transactionMappingsService: TransactionMappingsService
   ) {}
 
-  public async create(createPaymentTitleMovementDto: CreatePaymentTitleMovementDto): Promise<PaymentTitleMovement> {
+  public async create(dto: CreatePaymentTitleMovementDto): Promise<PaymentTitleMovement> {
     let paymentTitleMovement = new PaymentTitleMovement();
-    paymentTitleMovement = { ...paymentTitleMovement, ...createPaymentTitleMovementDto };
+    paymentTitleMovement = { ...paymentTitleMovement, ...dto };
 
     return await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
   }
@@ -31,6 +33,11 @@ export class PaymentTitleMovementsService {
   public async createIssuingMovement(dto: CreateIssuingMovementDto): Promise<PaymentTitleMovement> {
     if (!dto.value) {
       throw new BadRequestException();
+    }
+
+    const transactionMapping = this.transactionMappingsService.findOne(dto.transactionMappingId);
+    if (!transactionMapping) {
+      throw new NotFoundException();
     }
 
     // Possíveis validações
@@ -70,6 +77,11 @@ export class PaymentTitleMovementsService {
       throw new BadRequestException();
     }
 
+    const transactionMapping = this.transactionMappingsService.findOne(dto.transactionMappingId);
+    if (!transactionMapping) {
+      throw new NotFoundException();
+    }
+
     const updatedPaymentTitle = await this.paymentTitlesService.update(
       dto.paymentTitleId,
       {
@@ -97,6 +109,11 @@ export class PaymentTitleMovementsService {
 
     if (paymentTitle.status !== PaymentTitleStatus.Open) {
       throw new BadRequestException();
+    }
+
+    const transactionMapping = this.transactionMappingsService.findOne(dto.transactionMappingId);
+    if (!transactionMapping) {
+      throw new NotFoundException();
     }
 
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
@@ -140,6 +157,11 @@ export class PaymentTitleMovementsService {
       || paymentTitle.originalValue === paymentTitle.openValue
     ) {
       throw new BadRequestException();
+    }
+
+    const transactionMapping = this.transactionMappingsService.findOne(dto.transactionMappingId);
+    if (!transactionMapping) {
+      throw new NotFoundException();
     }
 
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
