@@ -6,6 +6,9 @@ export class ReceivableTitle {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column()
+  name: string;
+
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   originalValue: number;
 
@@ -15,10 +18,10 @@ export class ReceivableTitle {
   @Column({ type: 'datetime' })
   dueDate: Date;
 
-  @Column({ length: 45 })
+  @Column()
   payer: string;
 
-  @Column({ length: 45 })
+  @Column()
   recipient: string;
 
   @Column({
