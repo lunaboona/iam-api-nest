@@ -8,6 +8,7 @@ import { CreateCancellationMovementDto } from './dto/create-cancellation-movemen
 import { CreateIssuingMovementDto } from './dto/create-issuing-movement.dto';
 import { CreatePaymentMovementDto } from './dto/create-payment-movement.dto';
 import { CreatePaymentTitleMovementDto } from './dto/create-payment-title-movement.dto';
+import { CreateReversalMovementDto } from './dto/create-reversal-movement.dto';
 import { PaymentTitleMovement } from './entities/payment-title-movement.entity';
 import { PaymentTitleMovementType } from './enum/payment-title-movement-type.enum';
 
@@ -62,7 +63,10 @@ export class PaymentTitleMovementsService {
       throw new NotFoundException();
     }
 
-    if (paymentTitle.status !== PaymentTitleStatus.Open) {
+    if (
+      paymentTitle.status !== PaymentTitleStatus.Open
+      || paymentTitle.originalValue !== paymentTitle.openValue
+    ) {
       throw new BadRequestException();
     }
 
@@ -117,6 +121,44 @@ export class PaymentTitleMovementsService {
       paidValue: dto.paidValue,
       fineValue: dto.fineValue,
       interestValue: dto.interestValue,
+      paymentTitleId: updatedPaymentTitle.id,
+      paymentMethodId: dto.paymentMethodId,
+    }
+
+    const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
+    return await this.findOne(createdPaymentTitleMovement.id, true);
+  }
+
+  public async createReversalMovement(dto: CreateReversalMovementDto): Promise<PaymentTitleMovement> {
+    const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
+    if (!paymentTitle) {
+      throw new NotFoundException();
+    }
+
+    if (
+      paymentTitle.status === PaymentTitleStatus.Cancelled
+      || paymentTitle.originalValue === paymentTitle.openValue
+    ) {
+      throw new BadRequestException();
+    }
+
+    const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
+    if (!paymentMethod) {
+      throw new NotFoundException();
+    }
+
+    const updatedPaymentTitle = await this.paymentTitlesService.update(
+      dto.paymentTitleId,
+      {
+        openValue: 0,
+        status: PaymentTitleStatus.Cancelled
+      }
+    );
+
+    const paymentTitleMovement: PaymentTitleMovement = {
+      ...(new PaymentTitleMovement()),
+      type: PaymentTitleMovementType.Reversal,
+      date: dto.date,
       paymentTitleId: updatedPaymentTitle.id,
       paymentMethodId: dto.paymentMethodId,
     }
