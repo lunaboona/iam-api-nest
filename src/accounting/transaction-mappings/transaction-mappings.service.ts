@@ -22,7 +22,7 @@ export class TransactionMappingsService {
     return await this.transactionMappingsRepository.find();
   }
 
-  public async findOne(id: string): Promise<TransactionMapping> {
-    return await this.transactionMappingsRepository.findOne(id);
+  public async findOne(id: string, relations: string[] = []): Promise<TransactionMapping> {
+    return await this.transactionMappingsRepository.findOne(id, { relations });
   }
 }
