@@ -19,6 +19,7 @@ import { PaymentTitleMovementsModule } from './accounting/payment-title-movement
 import { ReceivableTitlesModule } from './accounting/receivable-titles/receivable-titles.module';
 import { PaymentMethodsModule } from './accounting/payment-methods/payment-methods.module';
 import { ReceivableTitleMovementsModule } from './accounting/receivable-title-movements/receivable-title-movements.module';
+import { AccountingModule } from './accounting/accounting.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ReceivableTitleMovementsModule } from './accounting/receivable-title-mo
     ProductsModule,
     MovementsModule,
     // Accounting
+    AccountingModule,
     AccountsModule,
     PaymentMethodsModule,
     PaymentTitleMovementsModule,
