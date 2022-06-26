@@ -19,13 +19,13 @@ export class ReceivableTitleMovement {
   })
   type: ReceivableTitleMovementType;
 
-  @Column({ type: 'decimal', precision: 14, scale: 2 })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   paidValue: number;
 
-  @Column({ type: 'decimal', precision: 14, scale: 2 })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   interestValue: number;
 
-  @Column({ type: 'decimal', precision: 14, scale: 2 })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   fineValue: number;
 
   @Column({ type: 'uuid' })
@@ -35,14 +35,14 @@ export class ReceivableTitleMovement {
   @JoinColumn({ name: 'receivableTitleId' })
   receivableTitle: ReceivableTitle;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   transactionMappingId?: string;
 
   @ManyToOne(() => TransactionMapping, { nullable: true })
   @JoinColumn({ name: 'transactionMappingId' })
   transactionMapping?: TransactionMapping;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   paymentMethodId?: string;
 
   @ManyToOne(() => PaymentMethod, { nullable: true })

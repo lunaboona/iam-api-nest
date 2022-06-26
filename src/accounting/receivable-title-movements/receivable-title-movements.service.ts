@@ -198,6 +198,6 @@ export class ReceivableTitleMovementsService {
     if (expand) {
       relations = ['receivableTitle', 'paymentMethod'];
     }
-    return await this.receivableTitleMovementsRepository.findOne(id);
+    return await this.receivableTitleMovementsRepository.findOne(id, { relations });
   }
 }
