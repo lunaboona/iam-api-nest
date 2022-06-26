@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { PaymentTitleMovementsService } from './payment-title-movements.service';
 import { CreatePaymentTitleMovementDto } from './dto/create-payment-title-movement.dto';
+import { CreateIssuingPaymentTitleMovementDto } from './dto/create-issuing-payment-title-movement.dto';
 
 @Controller('payment-title-movements')
 export class PaymentTitleMovementsController {
@@ -9,6 +10,11 @@ export class PaymentTitleMovementsController {
   @Post()
   create(@Body() createPaymentTitleMovementDto: CreatePaymentTitleMovementDto) {
     return this.paymentTitleMovementsService.create(createPaymentTitleMovementDto);
+  }
+
+  @Post('issuing')
+  createIssuingPaymentMovementTitle(@Body() dto: CreateIssuingPaymentTitleMovementDto) {
+    return this.paymentTitleMovementsService.createIssuingPaymentTitleMovement(dto);
   }
 
   @Get()

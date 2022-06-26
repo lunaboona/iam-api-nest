@@ -35,14 +35,14 @@ export class PaymentTitleMovement {
   @JoinColumn({ name: 'paymentTitleId' })
   paymentTitle: PaymentTitle;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   transactionMappingId?: string;
 
   @ManyToOne(() => TransactionMapping, { nullable: true })
   @JoinColumn({ name: 'transactionMappingId' })
   transactionMapping?: TransactionMapping;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   paymentMethodId?: string;
 
   @ManyToOne(() => PaymentMethod, { nullable: true })
