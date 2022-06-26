@@ -1,4 +1,4 @@
-export class CreateIssuingPaymentTitleMovementDto {
+export class CreateIssuingMovementDto {
   name: string;
   issuingDate: Date;
   dueDate: Date;

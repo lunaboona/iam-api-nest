@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaymentTitleStatus } from '../payment-titles/enum/payment-title-status.enum';
 import { PaymentTitlesService } from '../payment-titles/payment-titles.service';
-import { CreateCancellationPaymentTitleMovementDto } from './dto/create-cancellation-payment-title-movement.dto';
-import { CreateIssuingPaymentTitleMovementDto } from './dto/create-issuing-payment-title-movement.dto';
+import { CreateCancellationMovementDto } from './dto/create-cancellation-movement.dto';
+import { CreateIssuingMovementDto } from './dto/create-issuing-movement.dto';
 import { CreatePaymentTitleMovementDto } from './dto/create-payment-title-movement.dto';
 import { PaymentTitleMovement } from './entities/payment-title-movement.entity';
 import { PaymentTitleMovementType } from './enum/payment-title-movement-type.enum';
@@ -24,7 +24,7 @@ export class PaymentTitleMovementsService {
     return await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
   }
 
-  public async createIssuingPaymentTitleMovement(dto: CreateIssuingPaymentTitleMovementDto): Promise<PaymentTitleMovement> {
+  public async createIssuingMovement(dto: CreateIssuingMovementDto): Promise<PaymentTitleMovement> {
     let paymentTitle = await this.paymentTitlesService.create({
       name: dto.name,
       dueDate: dto.dueDate,
@@ -46,7 +46,7 @@ export class PaymentTitleMovementsService {
     return await this.findOne(createdPaymentTitleMovement.id, true);
   }
 
-  public async createCancellationPaymentTitleMovement(dto: CreateCancellationPaymentTitleMovementDto): Promise<PaymentTitleMovement> {
+  public async createCancellationMovement(dto: CreateCancellationMovementDto): Promise<PaymentTitleMovement> {
     const updatedPaymentTitle = await this.paymentTitlesService.update(
       dto.paymentTitleId,
       {

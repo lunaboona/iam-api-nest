@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { PaymentTitleMovementsService } from './payment-title-movements.service';
 import { CreatePaymentTitleMovementDto } from './dto/create-payment-title-movement.dto';
-import { CreateIssuingPaymentTitleMovementDto } from './dto/create-issuing-payment-title-movement.dto';
-import { CreateCancellationPaymentTitleMovementDto } from './dto/create-cancellation-payment-title-movement.dto';
+import { CreateIssuingMovementDto } from './dto/create-issuing-movement.dto';
+import { CreateCancellationMovementDto } from './dto/create-cancellation-movement.dto';
 
 @Controller('payment-title-movements')
 export class PaymentTitleMovementsController {
@@ -14,13 +14,13 @@ export class PaymentTitleMovementsController {
   }
 
   @Post('issuing')
-  createIssuingPaymentMovementTitle(@Body() dto: CreateIssuingPaymentTitleMovementDto) {
-    return this.paymentTitleMovementsService.createIssuingPaymentTitleMovement(dto);
+  createIssuingMovement(@Body() dto: CreateIssuingMovementDto) {
+    return this.paymentTitleMovementsService.createIssuingMovement(dto);
   }
 
   @Post('cancellation')
-  createCancellationPaymentMovementTitle(@Body() dto: CreateCancellationPaymentTitleMovementDto) {
-    return this.paymentTitleMovementsService.createCancellationPaymentTitleMovement(dto);
+  createCancellationMovement(@Body() dto: CreateCancellationMovementDto) {
+    return this.paymentTitleMovementsService.createCancellationMovement(dto);
   }
 
   @Get()
