@@ -11,6 +11,11 @@ export class AccountsController {
     return this.accountsService.create(createAccountDto);
   }
 
+  @Post('default')
+  createDefaultAccounts() {
+    return this.accountsService.createDefaultAccounts();
+  }
+
   @Get()
   findAll() {
     return this.accountsService.findAll();

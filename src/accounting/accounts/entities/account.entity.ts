@@ -8,10 +8,10 @@ export class Account {
   @Column()
   name: string;
 
-  @Column()
-  parentCode: string;
+  @Column({ nullable: true })
+  parentCode?: string;
 
-  @ManyToOne(() => Account)
+  @ManyToOne(() => Account, { nullable: true })
   @JoinColumn({ name: 'parentCode' })
-  parent: Account;
+  parent?: Account;
 }
