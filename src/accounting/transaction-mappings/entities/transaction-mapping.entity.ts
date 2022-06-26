@@ -27,5 +27,5 @@ export class TransactionMapping {
     enum: TransactionMethod,
     default: TransactionMethod.Credit,
   })
-  nature: TransactionMethod;
+  method: TransactionMethod;
 }

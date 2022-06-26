@@ -4,9 +4,9 @@ export class CreatePaymentTitleMovementDto {
   date: Date;
   type: PaymentTitleMovementType;
   paidValue: number;
-  paymentMethod: string;
   interestValue: number;
   fineValue: number;
   paymentTitleId: string;
   transactionMappingId: string;
+  paymentMethodId: string;
 }
