@@ -3,6 +3,7 @@ import { PaymentTitleMovementsService } from './payment-title-movements.service'
 import { CreatePaymentTitleMovementDto } from './dto/create-payment-title-movement.dto';
 import { CreateIssuingMovementDto } from './dto/create-issuing-movement.dto';
 import { CreateCancellationMovementDto } from './dto/create-cancellation-movement.dto';
+import { CreatePaymentMovementDto } from './dto/create-payment-movement.dto';
 
 @Controller('payment-title-movements')
 export class PaymentTitleMovementsController {
@@ -21,6 +22,11 @@ export class PaymentTitleMovementsController {
   @Post('cancellation')
   createCancellationMovement(@Body() dto: CreateCancellationMovementDto) {
     return this.paymentTitleMovementsService.createCancellationMovement(dto);
+  }
+
+  @Post('payment')
+  createPaymentMovement(@Body() dto: CreatePaymentMovementDto) {
+    return this.paymentTitleMovementsService.createPaymentMovement(dto);
   }
 
   @Get()

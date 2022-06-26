@@ -24,6 +24,9 @@ export class PaymentTitlesService {
   }
 
   public async findOne(id: string): Promise<PaymentTitle> {
+    if (!id) {
+      throw new NotFoundException();
+    }
     return await this.paymentTitlesRepository.findOne(id);
   }
 

@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 import { PaymentTitleStatus } from '../payment-titles/enum/payment-title-status.enum';
 import { PaymentTitlesService } from '../payment-titles/payment-titles.service';
 import { CreateCancellationMovementDto } from './dto/create-cancellation-movement.dto';
 import { CreateIssuingMovementDto } from './dto/create-issuing-movement.dto';
+import { CreatePaymentMovementDto } from './dto/create-payment-movement.dto';
 import { CreatePaymentTitleMovementDto } from './dto/create-payment-title-movement.dto';
 import { PaymentTitleMovement } from './entities/payment-title-movement.entity';
 import { PaymentTitleMovementType } from './enum/payment-title-movement-type.enum';
@@ -14,7 +16,8 @@ export class PaymentTitleMovementsService {
   constructor(
     @InjectRepository(PaymentTitleMovement)
     private paymentTitleMovementsRepository: Repository<PaymentTitleMovement>,
-    private paymentTitlesService: PaymentTitlesService
+    private paymentTitlesService: PaymentTitlesService,
+    private paymentMethodsService: PaymentMethodsService,
   ) {}
 
   public async create(createPaymentTitleMovementDto: CreatePaymentTitleMovementDto): Promise<PaymentTitleMovement> {
@@ -25,7 +28,14 @@ export class PaymentTitleMovementsService {
   }
 
   public async createIssuingMovement(dto: CreateIssuingMovementDto): Promise<PaymentTitleMovement> {
-    let paymentTitle = await this.paymentTitlesService.create({
+    if (!dto.value) {
+      throw new BadRequestException();
+    }
+
+    // Possíveis validações
+    // pode abrir um título com data de vencimento no passado?
+
+    const paymentTitle = await this.paymentTitlesService.create({
       name: dto.name,
       dueDate: dto.dueDate,
       openValue: dto.value,
@@ -35,7 +45,7 @@ export class PaymentTitleMovementsService {
       status: PaymentTitleStatus.Open
     })
 
-    const paymentTitleMovement = {
+    const paymentTitleMovement: PaymentTitleMovement = {
       ...(new PaymentTitleMovement()),
       type: PaymentTitleMovementType.Issuing,
       date: dto.issuingDate,
@@ -47,6 +57,15 @@ export class PaymentTitleMovementsService {
   }
 
   public async createCancellationMovement(dto: CreateCancellationMovementDto): Promise<PaymentTitleMovement> {
+    const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
+    if (!paymentTitle) {
+      throw new NotFoundException();
+    }
+
+    if (paymentTitle.status !== PaymentTitleStatus.Open) {
+      throw new BadRequestException();
+    }
+
     const updatedPaymentTitle = await this.paymentTitlesService.update(
       dto.paymentTitleId,
       {
@@ -55,12 +74,52 @@ export class PaymentTitleMovementsService {
       }
     );
 
-    const paymentTitleMovement = {
+    const paymentTitleMovement: PaymentTitleMovement = {
       ...(new PaymentTitleMovement()),
       type: PaymentTitleMovementType.Cancellation,
       date: dto.date,
       paymentTitleId: updatedPaymentTitle.id,
     };
+
+    const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
+    return await this.findOne(createdPaymentTitleMovement.id, true);
+  }
+
+  public async createPaymentMovement(dto: CreatePaymentMovementDto): Promise<PaymentTitleMovement> {
+    const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
+    if (!paymentTitle) {
+      throw new NotFoundException();
+    }
+
+    if (paymentTitle.status !== PaymentTitleStatus.Open) {
+      throw new BadRequestException();
+    }
+
+    const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
+    if (!paymentMethod) {
+      throw new NotFoundException();
+    }
+
+    paymentTitle.openValue -= dto.paidValue;
+
+    const updatedPaymentTitle = await this.paymentTitlesService.update(
+      dto.paymentTitleId,
+      {
+        openValue: paymentTitle.openValue,
+        status: paymentTitle.openValue > 0 ? PaymentTitleStatus.Open : PaymentTitleStatus.Settled
+      }
+    );
+
+    const paymentTitleMovement: PaymentTitleMovement = {
+      ...(new PaymentTitleMovement()),
+      type: PaymentTitleMovementType.Payment,
+      date: dto.date,
+      paidValue: dto.paidValue,
+      fineValue: dto.fineValue,
+      interestValue: dto.interestValue,
+      paymentTitleId: updatedPaymentTitle.id,
+      paymentMethodId: dto.paymentMethodId,
+    }
 
     const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
     return await this.findOne(createdPaymentTitleMovement.id, true);
@@ -73,7 +132,7 @@ export class PaymentTitleMovementsService {
   public async findOne(id: string, expand: boolean = false): Promise<PaymentTitleMovement> {
     let relations = [];
     if (expand) {
-      relations = ['paymentTitle'];
+      relations = ['paymentTitle', 'paymentMethod'];
     }
     return await this.paymentTitleMovementsRepository.findOne(id, { relations });
   }
