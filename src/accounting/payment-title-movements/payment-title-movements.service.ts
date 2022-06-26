@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaymentTitleStatus } from '../payment-titles/enum/payment-title-status.enum';
 import { PaymentTitlesService } from '../payment-titles/payment-titles.service';
+import { CreateCancellationPaymentTitleMovementDto } from './dto/create-cancellation-payment-title-movement.dto';
 import { CreateIssuingPaymentTitleMovementDto } from './dto/create-issuing-payment-title-movement.dto';
 import { CreatePaymentTitleMovementDto } from './dto/create-payment-title-movement.dto';
 import { PaymentTitleMovement } from './entities/payment-title-movement.entity';
@@ -34,15 +35,31 @@ export class PaymentTitleMovementsService {
       status: PaymentTitleStatus.Open
     })
 
-    let paymentTitleMovement = new PaymentTitleMovement();
-    paymentTitleMovement = {
-      ...paymentTitleMovement,
+    const paymentTitleMovement = {
+      ...(new PaymentTitleMovement()),
       type: PaymentTitleMovementType.Issuing,
       date: dto.issuingDate,
-      fineValue: 0,
-      interestValue: 0,
-      paidValue: 0,
       paymentTitleId: paymentTitle.id,
+    };
+
+    const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
+    return await this.findOne(createdPaymentTitleMovement.id, true);
+  }
+
+  public async createCancellationPaymentTitleMovement(dto: CreateCancellationPaymentTitleMovementDto): Promise<PaymentTitleMovement> {
+    const updatedPaymentTitle = await this.paymentTitlesService.update(
+      dto.paymentTitleId,
+      {
+        openValue: 0,
+        status: PaymentTitleStatus.Cancelled
+      }
+    );
+
+    const paymentTitleMovement = {
+      ...(new PaymentTitleMovement()),
+      type: PaymentTitleMovementType.Cancellation,
+      date: dto.date,
+      paymentTitleId: updatedPaymentTitle.id,
     };
 
     const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);

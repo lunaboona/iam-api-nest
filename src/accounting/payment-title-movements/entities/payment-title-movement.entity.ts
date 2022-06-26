@@ -19,13 +19,13 @@ export class PaymentTitleMovement {
   })
   type: PaymentTitleMovementType;
 
-  @Column({ type: 'decimal', precision: 14, scale: 2 })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   paidValue: number;
 
-  @Column({ type: 'decimal', precision: 14, scale: 2 })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   interestValue: number;
 
-  @Column({ type: 'decimal', precision: 14, scale: 2 })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   fineValue: number;
 
   @Column({ type: 'uuid' })
