@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Account } from 'src/accounting/accounts/entities/account.entity';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class PaymentMethod {
@@ -7,4 +8,11 @@ export class PaymentMethod {
 
   @Column()
   name: string;
+
+  @Column()
+  accountCode: string;
+
+  @ManyToOne(() => Account)
+  @JoinColumn({ name: 'accountCode' })
+  account: Account;
 }

@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreatePurchasePaymentDto } from './dto/create-purchase-payment.dto';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
+import { PurchasePaymentResponseDto } from './dto/purchase-payment-response.dto';
 import { PurchaseResponseDto } from './dto/purchase-response.dto';
+import { PaymentMethodsService } from './payment-methods/payment-methods.service';
 import { PaymentTitleMovementsService } from './payment-title-movements/payment-title-movements.service';
 import { TransactionMethod } from './transaction-mappings/enum/transaction-method.enum';
 import { TransactionMappingsService } from './transaction-mappings/transaction-mappings.service';
@@ -12,7 +15,8 @@ export class AccountingService {
   constructor(
     private transactionsService: TransactionsService,
     private transactionMappingsService: TransactionMappingsService,
-    private paymentTitleMovementsService: PaymentTitleMovementsService
+    private paymentTitleMovementsService: PaymentTitleMovementsService,
+    private paymentMethodsService: PaymentMethodsService
   ) { }
 
   public async createPurchase(dto: CreatePurchaseDto): Promise<PurchaseResponseDto> {
@@ -56,6 +60,58 @@ export class AccountingService {
       mappings: [
         titleMappingWithAccount,
         merchandiseMappingWithAccount
+      ],
+      paymentTitleMovement
+    };
+  }
+
+  public async createPurchasePayment(dto: CreatePurchasePaymentDto): Promise<PurchasePaymentResponseDto> {
+    const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
+    if (!paymentMethod) {
+      throw new NotFoundException();
+    }
+
+    const transaction = await this.transactionsService.create({
+      code: dto.transactionCode,
+      name: dto.transactionName
+    });
+
+    const paymentTitleAccountCode = '2.1.2.01';
+
+    const titleMapping = await this.transactionMappingsService.create({
+      transactionCode: dto.transactionCode,
+      method: TransactionMethod.Credit,
+      accountCode: paymentTitleAccountCode,
+      date: dto.date,
+      value: dto.paidValue
+    });
+
+    const paymentMapping = await this.transactionMappingsService.create({
+      transactionCode: dto.transactionCode,
+      method: TransactionMethod.Credit,
+      accountCode: paymentMethod.accountCode,
+      date: dto.date,
+      value: (dto.paidValue || 0) + (dto.interestValue || 0) + (dto.fineValue || 0)
+    });
+
+    const paymentTitleMovement = await this.paymentTitleMovementsService.createPaymentMovement({
+      date: dto.date,
+      fineValue: dto.fineValue,
+      interestValue: dto.interestValue,
+      paidValue: dto.paidValue,
+      paymentMethodId: dto.paymentMethodId,
+      paymentTitleId: dto.paymentTitleId,
+      transactionMappingId: paymentMapping.id
+    });
+
+    const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
+    const paymentMappingWithAccount = await this.transactionMappingsService.findOne(paymentMapping.id, ['account']);
+
+    return {
+      transaction,
+      mappings: [
+        titleMappingWithAccount,
+        paymentMappingWithAccount
       ],
       paymentTitleMovement
     };

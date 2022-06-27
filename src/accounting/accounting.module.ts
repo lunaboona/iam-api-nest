@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AccountingController } from './accounting.controller';
 import { AccountingService } from './accounting.service';
+import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 import { PaymentTitleMovementsModule } from './payment-title-movements/payment-title-movements.module';
 import { TransactionMappingsModule } from './transaction-mappings/transaction-mappings.module';
 import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
-  imports: [TransactionsModule, TransactionMappingsModule, PaymentTitleMovementsModule],
+  imports: [TransactionsModule, TransactionMappingsModule, PaymentTitleMovementsModule, PaymentMethodsModule],
   controllers: [AccountingController],
   providers: [AccountingService],
   exports: [AccountingService]

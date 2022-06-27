@@ -58,6 +58,7 @@ export class PaymentTitleMovementsService {
       type: PaymentTitleMovementType.Issuing,
       date: dto.issuingDate,
       paymentTitleId: paymentTitle.id,
+      transactionMappingId: dto.transactionMappingId
     };
 
     const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
@@ -95,6 +96,7 @@ export class PaymentTitleMovementsService {
       type: PaymentTitleMovementType.Cancellation,
       date: dto.date,
       paymentTitleId: updatedPaymentTitle.id,
+      transactionMappingId: dto.transactionMappingId
     };
 
     const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
@@ -140,6 +142,7 @@ export class PaymentTitleMovementsService {
       interestValue: dto.interestValue,
       paymentTitleId: updatedPaymentTitle.id,
       paymentMethodId: dto.paymentMethodId,
+      transactionMappingId: dto.transactionMappingId
     }
 
     const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
@@ -183,6 +186,7 @@ export class PaymentTitleMovementsService {
       date: dto.date,
       paymentTitleId: updatedPaymentTitle.id,
       paymentMethodId: dto.paymentMethodId,
+      transactionMappingId: dto.transactionMappingId
     }
 
     const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
