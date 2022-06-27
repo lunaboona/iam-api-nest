@@ -4,6 +4,8 @@ import { AccountingService } from './accounting.service';
 import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 import { PaymentTitleMovementsModule } from './payment-title-movements/payment-title-movements.module';
 import { PaymentTitlesModule } from './payment-titles/payment-titles.module';
+import { ReceivableTitleMovementsModule } from './receivable-title-movements/receivable-title-movements.module';
+import { ReceivableTitlesModule } from './receivable-titles/receivable-titles.module';
 import { TransactionMappingsModule } from './transaction-mappings/transaction-mappings.module';
 import { TransactionsModule } from './transactions/transactions.module';
 
@@ -14,6 +16,8 @@ import { TransactionsModule } from './transactions/transactions.module';
     PaymentTitleMovementsModule,
     PaymentMethodsModule,
     PaymentTitlesModule,
+    ReceivableTitleMovementsModule,
+    ReceivableTitlesModule
   ],
   controllers: [AccountingController],
   providers: [AccountingService],

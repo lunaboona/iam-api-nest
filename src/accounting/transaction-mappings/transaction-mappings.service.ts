@@ -25,4 +25,10 @@ export class TransactionMappingsService {
   public async findOne(id: string, relations: string[] = []): Promise<TransactionMapping> {
     return await this.transactionMappingsRepository.findOne(id, { relations });
   }
+
+  public async findByTransactionCode(transactionCode): Promise<TransactionMapping[]> {
+    return await this.transactionMappingsRepository.find({
+      where: { transactionCode }
+    })
+  }
 }

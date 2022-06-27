@@ -58,6 +58,7 @@ export class ReceivableTitleMovementsService {
       type: ReceivableTitleMovementType.Issuing,
       date: dto.issuingDate,
       receivableTitleId: receivableTitle.id,
+      transactionMappingId: dto.transactionMappingId
     };
 
     const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
@@ -95,6 +96,7 @@ export class ReceivableTitleMovementsService {
       type: ReceivableTitleMovementType.Cancellation,
       date: dto.date,
       receivableTitleId: updatedReceivableTitle.id,
+      transactionMappingId: dto.transactionMappingId
     };
 
     const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
@@ -140,6 +142,7 @@ export class ReceivableTitleMovementsService {
       interestValue: dto.interestValue,
       receivableTitleId: updatedReceivableTitle.id,
       paymentMethodId: dto.paymentMethodId,
+      transactionMappingId: dto.transactionMappingId
     }
 
     const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
@@ -183,6 +186,7 @@ export class ReceivableTitleMovementsService {
       date: dto.date,
       receivableTitleId: updatedReceivableTitle.id,
       paymentMethodId: dto.paymentMethodId,
+      transactionMappingId: dto.transactionMappingId
     }
 
     const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
@@ -191,6 +195,13 @@ export class ReceivableTitleMovementsService {
 
   public async findAll(): Promise<ReceivableTitleMovement[]> {
     return await this.receivableTitleMovementsRepository.find();
+  }
+
+  public async findByTitleId(receivableTitleId: string): Promise<ReceivableTitleMovement[]> {
+    return await this.receivableTitleMovementsRepository.find({
+      where: { receivableTitleId },
+      relations: ['transactionMapping']
+    });
   }
 
   public async findOne(id: string, expand: boolean = false): Promise<ReceivableTitleMovement> {
