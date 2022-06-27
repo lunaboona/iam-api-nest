@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { AccountingOperationResponseDto } from './dto/accounting-operation-response.dto';
+import { CreatePurchaseCancellationDto } from './dto/create-purchase-cancellation.dto';
 import { CreatePurchasePaymentDto } from './dto/create-purchase-payment.dto';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
-import { PurchasePaymentResponseDto } from './dto/purchase-payment-response.dto';
-import { PurchaseResponseDto } from './dto/purchase-response.dto';
 import { PaymentMethodsService } from './payment-methods/payment-methods.service';
 import { PaymentTitleMovementsService } from './payment-title-movements/payment-title-movements.service';
+import { PaymentTitlesService } from './payment-titles/payment-titles.service';
 import { TransactionMethod } from './transaction-mappings/enum/transaction-method.enum';
 import { TransactionMappingsService } from './transaction-mappings/transaction-mappings.service';
 import { TransactionsService } from './transactions/transactions.service';
@@ -16,10 +17,11 @@ export class AccountingService {
     private transactionsService: TransactionsService,
     private transactionMappingsService: TransactionMappingsService,
     private paymentTitleMovementsService: PaymentTitleMovementsService,
-    private paymentMethodsService: PaymentMethodsService
+    private paymentMethodsService: PaymentMethodsService,
+    private paymentTitlesService: PaymentTitlesService
   ) { }
 
-  public async createPurchase(dto: CreatePurchaseDto): Promise<PurchaseResponseDto> {
+  public async createPurchase(dto: CreatePurchaseDto): Promise<AccountingOperationResponseDto> {
     const transaction = await this.transactionsService.create({
       code: dto.transactionCode,
       name: dto.transactionName
@@ -51,7 +53,6 @@ export class AccountingService {
       transactionMappingId: titleMapping.id
     });
 
-
     const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
     const merchandiseMappingWithAccount = await this.transactionMappingsService.findOne(merchandiseMapping.id, ['account']);
 
@@ -65,9 +66,14 @@ export class AccountingService {
     };
   }
 
-  public async createPurchasePayment(dto: CreatePurchasePaymentDto): Promise<PurchasePaymentResponseDto> {
+  public async createPurchasePayment(dto: CreatePurchasePaymentDto): Promise<AccountingOperationResponseDto> {
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
     if (!paymentMethod) {
+      throw new NotFoundException();
+    }
+
+    const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
+    if (!paymentTitle) {
       throw new NotFoundException();
     }
 
@@ -112,6 +118,55 @@ export class AccountingService {
       mappings: [
         titleMappingWithAccount,
         paymentMappingWithAccount
+      ],
+      paymentTitleMovement
+    };
+  }
+
+  public async createPurchaseCancellation(dto: CreatePurchaseCancellationDto): Promise<AccountingOperationResponseDto> {
+    const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
+    if (!paymentTitle) {
+      throw new NotFoundException();
+    }
+
+    const transaction = await this.transactionsService.create({
+      code: dto.transactionCode,
+      name: dto.transactionName
+    });
+
+    const merchandiseAccountCode = '1.1.4.01';
+    const paymentTitleAccountCode = '2.1.2.01';
+
+    const titleMapping = await this.transactionMappingsService.create({
+      transactionCode: dto.transactionCode,
+      method: TransactionMethod.Credit,
+      accountCode: paymentTitleAccountCode,
+      date: dto.date,
+      value: paymentTitle.originalValue
+    });
+
+    const merchandiseMapping = await this.transactionMappingsService.create({
+      transactionCode: dto.transactionCode,
+      method: TransactionMethod.Credit,
+      accountCode: merchandiseAccountCode,
+      date: dto.date,
+      value: paymentTitle.originalValue
+    });
+
+    const paymentTitleMovement = await this.paymentTitleMovementsService.createCancellationMovement({
+      date: dto.date,
+      paymentTitleId: dto.paymentTitleId,
+      transactionMappingId: titleMapping.id
+    });
+
+    const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
+    const merchandiseMappingWithAccount = await this.transactionMappingsService.findOne(merchandiseMapping.id, ['account']);
+
+    return {
+      transaction,
+      mappings: [
+        titleMappingWithAccount,
+        merchandiseMappingWithAccount
       ],
       paymentTitleMovement
     };
