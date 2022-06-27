@@ -2,6 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { AccountingService } from './accounting.service';
 import { CreatePurchaseCancellationDto } from './dto/create-purchase-cancellation.dto';
 import { CreatePurchasePaymentDto } from './dto/create-purchase-payment.dto';
+import { CreatePurchaseReversalDto } from './dto/create-purchase-reversal.dto';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 
 @Controller('accounting')
@@ -23,5 +24,10 @@ export class AccountingController {
   @Post('purchase-cancellation')
   createPurchaseCancellation(@Body() dto: CreatePurchaseCancellationDto) {
     return this.accountingService.createPurchaseCancellation(dto);
+  }
+
+  @Post('purchase-reversal')
+  createPurchaseReversal(@Body() dto: CreatePurchaseReversalDto) {
+    return this.accountingService.createPurchaseReversal(dto);
   }
 }

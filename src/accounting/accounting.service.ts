@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AccountingOperationResponseDto } from './dto/accounting-operation-response.dto';
 import { CreatePurchaseCancellationDto } from './dto/create-purchase-cancellation.dto';
 import { CreatePurchasePaymentDto } from './dto/create-purchase-payment.dto';
+import { CreatePurchaseReversalDto } from './dto/create-purchase-reversal.dto';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { PaymentMethodsService } from './payment-methods/payment-methods.service';
 import { PaymentTitleMovementsService } from './payment-title-movements/payment-title-movements.service';
@@ -167,6 +168,60 @@ export class AccountingService {
       mappings: [
         titleMappingWithAccount,
         merchandiseMappingWithAccount
+      ],
+      paymentTitleMovement
+    };
+  }
+
+  public async createPurchaseReversal(dto: CreatePurchaseReversalDto): Promise<AccountingOperationResponseDto> {
+    const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
+    if (!paymentMethod) {
+      throw new NotFoundException();
+    }
+
+    const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
+    if (!paymentTitle) {
+      throw new NotFoundException();
+    }
+
+    const transaction = await this.transactionsService.create({
+      code: dto.transactionCode,
+      name: dto.transactionName
+    });
+
+    const paymentTitleAccountCode = '2.1.2.01';
+
+    const titleMapping = await this.transactionMappingsService.create({
+      transactionCode: dto.transactionCode,
+      method: TransactionMethod.Credit,
+      accountCode: paymentTitleAccountCode,
+      date: dto.date,
+      value: paymentTitle.openValue
+    });
+
+    const paymentMapping = await this.transactionMappingsService.create({
+      transactionCode: dto.transactionCode,
+      method: TransactionMethod.Debit,
+      accountCode: paymentMethod.accountCode,
+      date: dto.date,
+      value: paymentTitle.originalValue - paymentTitle.openValue
+    });
+
+    const paymentTitleMovement = await this.paymentTitleMovementsService.createReversalMovement({
+      date: dto.date,
+      paymentMethodId: dto.paymentMethodId,
+      paymentTitleId: dto.paymentTitleId,
+      transactionMappingId: paymentMapping.id,
+    });
+
+    const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
+    const paymentMappingWithAccount = await this.transactionMappingsService.findOne(paymentMapping.id, ['account']);
+
+    return {
+      transaction,
+      mappings: [
+        titleMappingWithAccount,
+        paymentMappingWithAccount
       ],
       paymentTitleMovement
     };
