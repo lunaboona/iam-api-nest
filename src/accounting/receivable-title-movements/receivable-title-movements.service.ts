@@ -8,7 +8,6 @@ import { TransactionMappingsService } from '../transaction-mappings/transaction-
 import { CreateCancellationMovementDto } from './dto/create-cancellation-movement.dto';
 import { CreateIssuingMovementDto } from './dto/create-issuing-movement.dto';
 import { CreatePaymentMovementDto } from './dto/create-payment-movement.dto';
-import { CreateReceivableTitleMovementDto } from './dto/create-receivable-title-movement.dto';
 import { CreateReversalMovementDto } from './dto/create-reversal-movement.dto';
 import { ReceivableTitleMovement } from './entities/receivable-title-movement.entity';
 import { ReceivableTitleMovementType } from './enum/receivable-title-movement-type.enum';
@@ -22,13 +21,6 @@ export class ReceivableTitleMovementsService {
     private paymentMethodsService: PaymentMethodsService,
     private transactionMappingsService: TransactionMappingsService
   ) {}
-
-  public async create(createReceivableTitleMovementDto: CreateReceivableTitleMovementDto): Promise<ReceivableTitleMovement> {
-    let receivableTitleMovement = new ReceivableTitleMovement();
-    receivableTitleMovement = { ...receivableTitleMovement, ...createReceivableTitleMovementDto };
-
-    return await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
-  }
 
   public async createIssuingMovement(dto: CreateIssuingMovementDto): Promise<ReceivableTitleMovement> {
     if (!dto.value) {

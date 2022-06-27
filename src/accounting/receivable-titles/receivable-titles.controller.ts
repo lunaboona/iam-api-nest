@@ -1,15 +1,9 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ReceivableTitlesService } from './receivable-titles.service';
-import { CreateReceivableTitleDto } from './dto/create-receivable-title.dto';
 
 @Controller('receivable-titles')
 export class ReceivableTitlesController {
-  constructor(private readonly receivableTitlesService: ReceivableTitlesService) {}
-
-  @Post()
-  create(@Body() createReceivableTitleDto: CreateReceivableTitleDto) {
-    return this.receivableTitlesService.create(createReceivableTitleDto);
-  }
+  constructor(private readonly receivableTitlesService: ReceivableTitlesService) { }
 
   @Get()
   findAll() {
