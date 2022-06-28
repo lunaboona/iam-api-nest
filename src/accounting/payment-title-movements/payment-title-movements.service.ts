@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 import { PaymentTitleStatus } from '../payment-titles/enum/payment-title-status.enum';
 import { PaymentTitlesService } from '../payment-titles/payment-titles.service';
@@ -22,14 +22,9 @@ export class PaymentTitleMovementsService {
     private transactionMappingsService: TransactionMappingsService
   ) {}
 
-  public async createIssuingMovement(dto: CreateIssuingMovementDto): Promise<PaymentTitleMovement> {
+  public async createIssuingMovement(dto: CreateIssuingMovementDto, queryRunner: QueryRunner = null): Promise<PaymentTitleMovement> {
     if (!dto.value) {
       throw new BadRequestException();
-    }
-
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException();
     }
 
     // Possíveis validações
@@ -43,18 +38,15 @@ export class PaymentTitleMovementsService {
       payer: dto.payer,
       recipient: dto.recipient,
       status: PaymentTitleStatus.Open
-    })
+    }, queryRunner)
 
-    const paymentTitleMovement: PaymentTitleMovement = {
-      ...(new PaymentTitleMovement()),
-      type: PaymentTitleMovementType.Issuing,
-      date: dto.issuingDate,
-      paymentTitleId: paymentTitle.id,
-      transactionMappingId: dto.transactionMappingId
-    };
+    const paymentTitleMovement = new PaymentTitleMovement();
+    paymentTitleMovement.type = PaymentTitleMovementType.Issuing;
+    paymentTitleMovement.date = dto.issuingDate;
+    paymentTitleMovement.paymentTitleId = paymentTitle.id;
+    paymentTitleMovement.transactionMappingId = dto.transactionMapping.id;
 
-    const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
-    return await this.findOne(createdPaymentTitleMovement.id, true);
+    return queryRunner.manager.save(paymentTitleMovement);
   }
 
   public async createCancellationMovement(dto: CreateCancellationMovementDto): Promise<PaymentTitleMovement> {

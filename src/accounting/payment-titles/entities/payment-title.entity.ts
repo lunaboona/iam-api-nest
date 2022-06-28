@@ -1,3 +1,4 @@
+import { CreatePaymentTitleDto } from './../dto/create-payment-title.dto';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { PaymentTitleStatus } from '../enum/payment-title-status.enum';
 
@@ -30,4 +31,14 @@ export class PaymentTitle {
     default: PaymentTitleStatus.Open,
   })
   status: PaymentTitleStatus;
+
+  public fillFields(dto: CreatePaymentTitleDto) {
+    this.name = dto.name;
+    this.originalValue = dto.originalValue;
+    this.openValue = dto.openValue;
+    this.status = dto.status;
+    this.dueDate = dto.dueDate;
+    this.payer = dto.payer;
+    this.recipient = dto.recipient;
+  }
 }

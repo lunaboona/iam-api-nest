@@ -17,11 +17,13 @@ import { ReceivableTitlesService } from './receivable-titles/receivable-titles.s
 import { TransactionMethod } from './transaction-mappings/enum/transaction-method.enum';
 import { TransactionMappingsService } from './transaction-mappings/transaction-mappings.service';
 import { TransactionsService } from './transactions/transactions.service';
+import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class AccountingService {
 
   constructor(
+    private entityManager: EntityManager,
     private transactionsService: TransactionsService,
     private transactionMappingsService: TransactionMappingsService,
     private paymentTitleMovementsService: PaymentTitleMovementsService,
@@ -33,48 +35,63 @@ export class AccountingService {
 
   //#region Purchase
   public async createPurchase(dto: CreatePurchaseDto): Promise<AccountingOperationResponseDto> {
-    const transaction = await this.transactionsService.create({
-      code: dto.transactionCode,
-      name: dto.transactionName
-    });
+    const queryRunner = this.entityManager.connection.createQueryRunner();
 
-    const merchandiseAccountCode = '1.1.4.01';
-    const paymentTitleAccountCode = '2.1.2.01';
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const titleMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Debit,
-      accountCode: paymentTitleAccountCode,
-      date: dto.date,
-      value: dto.value
-    });
+    try {
+      const transaction = await this.transactionsService.create({
+        code: dto.transactionCode,
+        name: dto.transactionName
+      }, queryRunner);
 
-    const merchandiseMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Debit,
-      accountCode: merchandiseAccountCode,
-      date: dto.date,
-      value: dto.value
-    });
+      const merchandiseAccountCode = '1.1.4.01';
+      const paymentTitleAccountCode = '2.1.2.01';
 
-    const paymentTitleMovement = await this.paymentTitleMovementsService.createIssuingMovement({
-      ...dto.paymentTitle,
-      issuingDate: dto.date,
-      value: dto.value,
-      transactionMappingId: titleMapping.id
-    });
+      const titleMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Debit,
+        accountCode: paymentTitleAccountCode,
+        date: dto.date,
+        value: dto.value
+      }, queryRunner);
 
-    const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
-    const merchandiseMappingWithAccount = await this.transactionMappingsService.findOne(merchandiseMapping.id, ['account']);
+      const merchandiseMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Debit,
+        accountCode: merchandiseAccountCode,
+        date: dto.date,
+        value: dto.value
+      }, queryRunner);
 
-    return {
-      transaction,
-      mappings: [
-        titleMappingWithAccount,
-        merchandiseMappingWithAccount
-      ],
-      paymentTitleMovement
-    };
+      const paymentTitleMovement = await this.paymentTitleMovementsService.createIssuingMovement({
+        ...dto.paymentTitle,
+        issuingDate: dto.date,
+        value: dto.value,
+        transactionMapping: titleMapping
+      }, queryRunner);
+
+      await queryRunner.commitTransaction();
+
+      const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
+      const merchandiseMappingWithAccount = await this.transactionMappingsService.findOne(merchandiseMapping.id, ['account']);
+      const paymentTitleMovementExpanded = await this.paymentTitleMovementsService.findOne(paymentTitleMovement.id, true)
+
+      return {
+        transaction,
+        mappings: [
+          titleMappingWithAccount,
+          merchandiseMappingWithAccount
+        ],
+        paymentTitleMovement: paymentTitleMovementExpanded
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   public async createPurchasePayment(dto: CreatePurchasePaymentDto): Promise<AccountingOperationResponseDto> {

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { CreatePaymentTitleDto } from './dto/create-payment-title.dto';
 import { UpdatePaymentTitleDto } from './dto/update-payment-title.dto';
 import { PaymentTitle } from './entities/payment-title.entity';
@@ -12,11 +12,11 @@ export class PaymentTitlesService {
     private paymentTitlesRepository: Repository<PaymentTitle>,
   ) {}
 
-  public async create(createPaymentTitleDto: CreatePaymentTitleDto): Promise<PaymentTitle> {
-    let paymentTitle = new PaymentTitle();
-    paymentTitle = { ...paymentTitle, ...createPaymentTitleDto };
+  public async create(dto: CreatePaymentTitleDto, queryRunner: QueryRunner = null): Promise<PaymentTitle> {
+    const paymentTitle = new PaymentTitle();
+    paymentTitle.fillFields(dto);
 
-    return await this.paymentTitlesRepository.save(paymentTitle);
+    return await queryRunner.manager.save(paymentTitle);
   }
 
   public async findAll(): Promise<PaymentTitle[]> {
@@ -36,10 +36,8 @@ export class PaymentTitlesService {
       throw new NotFoundException();
     }
 
-    paymentTitle = {
-      ...paymentTitle,
-      ...dto
-    };
+    paymentTitle.openValue = dto.openValue;
+    paymentTitle.status = dto.status;
 
     return await this.paymentTitlesRepository.save(paymentTitle);
   }

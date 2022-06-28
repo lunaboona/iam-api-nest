@@ -1,6 +1,10 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { Transaction } from './entities/transaction.entity';
 
@@ -11,7 +15,10 @@ export class TransactionsService {
     private transactionsRepository: Repository<Transaction>,
   ) {}
 
-  public async create(dto: CreateTransactionDto): Promise<Transaction> {
+  public async create(
+    dto: CreateTransactionDto,
+    queryRunner: QueryRunner = null,
+  ): Promise<Transaction> {
     if (!dto.code) {
       throw new BadRequestException();
     }
@@ -20,10 +27,10 @@ export class TransactionsService {
       throw new ConflictException();
     }
 
-    let transaction = new Transaction();
-    transaction = { ...transaction, ...dto };
+    const transaction = new Transaction();
+    transaction.fillFields(dto);
 
-    return await this.transactionsRepository.save(transaction);
+    return await queryRunner.manager.save(transaction);
   }
 
   public async findAll(): Promise<Transaction[]> {
