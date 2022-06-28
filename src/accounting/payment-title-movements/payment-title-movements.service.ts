@@ -24,7 +24,7 @@ export class PaymentTitleMovementsService {
 
   public async createIssuingMovement(dto: CreateIssuingMovementDto, queryRunner: QueryRunner = null): Promise<PaymentTitleMovement> {
     if (!dto.value) {
-      throw new BadRequestException();
+      throw new BadRequestException('Value must be greater than 0');
     }
 
     // Possíveis validações
@@ -52,19 +52,19 @@ export class PaymentTitleMovementsService {
   public async createCancellationMovement(dto: CreateCancellationMovementDto): Promise<PaymentTitleMovement> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     if (
       paymentTitle.status !== PaymentTitleStatus.Open
       || paymentTitle.originalValue !== paymentTitle.openValue
     ) {
-      throw new BadRequestException();
+      throw new BadRequestException('Payment title must have OPEN status and no payments');
     }
 
     const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
-      throw new NotFoundException();
+      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     const updatedPaymentTitle = await this.paymentTitlesService.update(
@@ -90,21 +90,21 @@ export class PaymentTitleMovementsService {
   public async createPaymentMovement(dto: CreatePaymentMovementDto): Promise<PaymentTitleMovement> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     if (paymentTitle.status !== PaymentTitleStatus.Open) {
-      throw new BadRequestException();
+      throw new BadRequestException('Payment title must have OPEN status');
     }
 
     const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
-      throw new NotFoundException();
+      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     paymentTitle.openValue -= dto.paidValue;
@@ -136,24 +136,24 @@ export class PaymentTitleMovementsService {
   public async createReversalMovement(dto: CreateReversalMovementDto): Promise<PaymentTitleMovement> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     if (
       paymentTitle.status === PaymentTitleStatus.Cancelled
       || paymentTitle.originalValue === paymentTitle.openValue
     ) {
-      throw new BadRequestException();
+      throw new BadRequestException('Payment title must not be CANCELLED and must have at least one payment');
     }
 
     const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
-      throw new NotFoundException();
+      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const updatedPaymentTitle = await this.paymentTitlesService.update(

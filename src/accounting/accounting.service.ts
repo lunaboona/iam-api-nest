@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { AccountsService } from './accounts/accounts.service';
 import { AccountingOperationResponseDto } from './dto/accounting-operation-response.dto';
+import { BalanceSheetResponseDto } from './dto/balance-sheet-response.dto';
+import { BalanceSheetTransactionDto } from './dto/balance-sheet-transaction.dto';
 import { CreatePurchaseCancellationDto } from './dto/create-purchase-cancellation.dto';
 import { CreatePurchasePaymentDto } from './dto/create-purchase-payment.dto';
 import { CreatePurchaseReversalDto } from './dto/create-purchase-reversal.dto';
@@ -8,12 +11,14 @@ import { CreateSaleCancellationDto } from './dto/create-sale-cancellation.dto';
 import { CreateSalePaymentDto } from './dto/create-sale-payment.dto';
 import { CreateSaleReversalDto } from './dto/create-sale-reversal.dto';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { GetBalanceSheetDto } from './dto/get-balance-sheet.dto';
 import { PaymentMethodsService } from './payment-methods/payment-methods.service';
 import { PaymentTitleMovementsService } from './payment-title-movements/payment-title-movements.service';
 import { PaymentTitlesService } from './payment-titles/payment-titles.service';
 import { ReceivableTitleMovementType } from './receivable-title-movements/enum/receivable-title-movement-type.enum';
 import { ReceivableTitleMovementsService } from './receivable-title-movements/receivable-title-movements.service';
 import { ReceivableTitlesService } from './receivable-titles/receivable-titles.service';
+import { TransactionMapping } from './transaction-mappings/entities/transaction-mapping.entity';
 import { TransactionMethod } from './transaction-mappings/enum/transaction-method.enum';
 import { TransactionMappingsService } from './transaction-mappings/transaction-mappings.service';
 import { TransactionsService } from './transactions/transactions.service';
@@ -31,7 +36,46 @@ export class AccountingService {
     private paymentTitlesService: PaymentTitlesService,
     private receivableTitleMovementsService: ReceivableTitleMovementsService,
     private receivableTitlesService: ReceivableTitlesService,
+    private accountsService: AccountsService
   ) { }
+
+  public async getBalanceSheet(dto: GetBalanceSheetDto): Promise<BalanceSheetResponseDto> {
+
+    let mappings: TransactionMapping[] = [];
+    const accounts = await this.accountsService.findWithChildren(dto.accountCode);
+    for (const account of accounts) {
+      const accountMappings = await this.transactionMappingsService.findAllForBalanceSheet({
+        accountCode: account.code,
+        endDate: dto.endDate,
+        startDate: dto.startDate
+      });
+      mappings = [...mappings, ...accountMappings];
+    }
+
+    let balance = 0;
+    mappings.forEach(m => {
+      if (m.method === TransactionMethod.Credit) {
+        balance -= Number(m.value);
+      } else {
+        balance += Number(m.value);
+      }
+    });
+
+    return {
+      balance,
+      transactions: mappings.map(m => <BalanceSheetTransactionDto>{
+        id: m.id,
+        date: m.date,
+        method: m.method,
+        value: m.value,
+        methodDescription: m.method === TransactionMethod.Credit ? 'Credit' : 'Debit',
+        transactionCode: m.transactionCode,
+        transactionName: m.transaction.name,
+        accountCode: m.accountCode,
+        accountName: m.account.name
+      })
+    }
+  }
 
   //#region Purchase
   public async createPurchase(dto: CreatePurchaseDto): Promise<AccountingOperationResponseDto> {
@@ -97,12 +141,12 @@ export class AccountingService {
   public async createPurchasePayment(dto: CreatePurchasePaymentDto): Promise<AccountingOperationResponseDto> {
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -154,7 +198,7 @@ export class AccountingService {
   public async createPurchaseCancellation(dto: CreatePurchaseCancellationDto): Promise<AccountingOperationResponseDto> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -203,12 +247,12 @@ export class AccountingService {
   public async createPurchaseReversal(dto: CreatePurchaseReversalDto): Promise<AccountingOperationResponseDto> {
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -304,12 +348,12 @@ export class AccountingService {
   public async createSalePayment(dto: CreateSalePaymentDto): Promise<AccountingOperationResponseDto> {
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId)
     if (!receivableTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -361,7 +405,7 @@ export class AccountingService {
   public async createSaleCancellation(dto: CreateSaleCancellationDto): Promise<AccountingOperationResponseDto> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId)
     if (!receivableTitle) {
-      throw new NotFoundException('Receivable title not found');
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -425,12 +469,12 @@ export class AccountingService {
   public async createSaleReversal(dto: CreateSaleReversalDto): Promise<AccountingOperationResponseDto> {
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
     if (!paymentMethod) {
-      throw new NotFoundException('Payment method not found');
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId)
     if (!receivableTitle) {
-      throw new NotFoundException('Receivable title not found');
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     const transaction = await this.transactionsService.create({

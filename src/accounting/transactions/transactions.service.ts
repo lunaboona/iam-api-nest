@@ -20,11 +20,11 @@ export class TransactionsService {
     queryRunner: QueryRunner = null,
   ): Promise<Transaction> {
     if (!dto.code) {
-      throw new BadRequestException();
+      throw new BadRequestException('Transaction code must not be empty');
     }
 
     if (await this.findOne(dto.code)) {
-      throw new ConflictException();
+      throw new ConflictException('Transaction code already in use');
     }
 
     const transaction = new Transaction();

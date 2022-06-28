@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AccountingController } from './accounting.controller';
 import { AccountingService } from './accounting.service';
+import { AccountsModule } from './accounts/accounts.module';
 import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 import { PaymentTitleMovementsModule } from './payment-title-movements/payment-title-movements.module';
 import { PaymentTitlesModule } from './payment-titles/payment-titles.module';
@@ -17,7 +18,8 @@ import { TransactionsModule } from './transactions/transactions.module';
     PaymentMethodsModule,
     PaymentTitlesModule,
     ReceivableTitleMovementsModule,
-    ReceivableTitlesModule
+    ReceivableTitlesModule,
+    AccountsModule
   ],
   controllers: [AccountingController],
   providers: [AccountingService],

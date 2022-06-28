@@ -27,6 +27,13 @@ export class AccountsService {
     return await this.accountsRepository.findOne(code);
   }
 
+  public async findWithChildren(code: string): Promise<Account[]> {
+    const parent = await this.findOne(code);
+    const children = await this.accountsRepository.query(`SELECT * FROM ACCOUNT WHERE code LIKE '${code}.%'`);
+
+    return [parent, ...children];
+  }
+
   public async createDefaultAccounts(): Promise<CreateDefaultAccountsReturnDto> {
     const accounts: Account[] = [
       { code: '1', name: 'ATIVO' },
