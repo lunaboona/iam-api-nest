@@ -126,11 +126,6 @@ export class PaymentTitleMovementsService {
       throw new BadRequestException('Payment title must not be CANCELLED and must have at least one payment');
     }
 
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException('Transaction mapping does not exist');
-    }
-
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
     if (!paymentMethod) {
       throw new NotFoundException('Payment method does not exist');
@@ -141,7 +136,8 @@ export class PaymentTitleMovementsService {
       {
         openValue: 0,
         status: PaymentTitleStatus.Cancelled
-      }
+      },
+      queryRunner
     );
 
     const paymentTitleMovement = new PaymentTitleMovement();
@@ -149,10 +145,9 @@ export class PaymentTitleMovementsService {
     paymentTitleMovement.date = dto.date;
     paymentTitleMovement.paymentTitleId = updatedPaymentTitle.id;
     paymentTitleMovement.paymentMethodId = dto.paymentMethodId;
-    paymentTitleMovement.transactionMappingId = dto.transactionMappingId;
+    paymentTitleMovement.transactionMappingId = dto.transactionMapping.id;
 
-    const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
-    return await this.findOne(createdPaymentTitleMovement.id, true);
+    return queryRunner.manager.save(paymentTitleMovement);
   }
 
   public async findAll(): Promise<PaymentTitleMovement[]> {

@@ -285,47 +285,62 @@ export class AccountingService {
       throw new NotFoundException('Payment title does not exist');
     }
 
-    const transaction = await this.transactionsService.create({
-      code: dto.transactionCode,
-      name: dto.transactionName
-    });
+    const queryRunner = this.entityManager.connection.createQueryRunner();
 
-    const paymentTitleAccountCode = '2.1.2.01';
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const titleMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Credit,
-      accountCode: paymentTitleAccountCode,
-      date: dto.date,
-      value: paymentTitle.openValue
-    });
+    try {
+      const transaction = await this.transactionsService.create({
+        code: dto.transactionCode,
+        name: dto.transactionName
+      }, queryRunner);
 
-    const paymentMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Debit,
-      accountCode: paymentMethod.accountCode,
-      date: dto.date,
-      value: paymentTitle.originalValue - paymentTitle.openValue
-    });
+      const paymentTitleAccountCode = '2.1.2.01';
 
-    const paymentTitleMovement = await this.paymentTitleMovementsService.createReversalMovement({
-      date: dto.date,
-      paymentMethodId: dto.paymentMethodId,
-      paymentTitleId: dto.paymentTitleId,
-      transactionMappingId: paymentMapping.id,
-    });
+      const titleMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Credit,
+        accountCode: paymentTitleAccountCode,
+        date: dto.date,
+        value: paymentTitle.openValue
+      }, queryRunner);
 
-    const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
-    const paymentMappingWithAccount = await this.transactionMappingsService.findOne(paymentMapping.id, ['account']);
+      const paymentMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Debit,
+        accountCode: paymentMethod.accountCode,
+        date: dto.date,
+        value: paymentTitle.originalValue - paymentTitle.openValue
+      }, queryRunner);
 
-    return {
-      transaction,
-      mappings: [
-        titleMappingWithAccount,
-        paymentMappingWithAccount
-      ],
-      paymentTitleMovement
-    };
+      const paymentTitleMovement = await this.paymentTitleMovementsService.createReversalMovement({
+        date: dto.date,
+        paymentMethodId: dto.paymentMethodId,
+        paymentTitleId: dto.paymentTitleId,
+        transactionMapping: paymentMapping,
+      }, queryRunner);
+
+      await queryRunner.commitTransaction();
+
+      const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
+      const paymentMappingWithAccount = await this.transactionMappingsService.findOne(paymentMapping.id, ['account']);
+      const paymentTitleMovementExpanded = await this.paymentTitleMovementsService.findOne(paymentTitleMovement.id, true);
+
+      return {
+        transaction,
+        mappings: [
+          titleMappingWithAccount,
+          paymentMappingWithAccount
+        ],
+        paymentTitleMovement: paymentTitleMovementExpanded
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
   //#endregion Purchase
 
