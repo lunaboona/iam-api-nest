@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { AccountsService } from './accounts/accounts.service';
 import { AccountingOperationResponseDto } from './dto/accounting-operation-response.dto';
 import { BalanceSheetResponseDto } from './dto/balance-sheet-response.dto';
 import { BalanceSheetTransactionDto } from './dto/balance-sheet-transaction.dto';
@@ -17,6 +18,7 @@ import { PaymentTitlesService } from './payment-titles/payment-titles.service';
 import { ReceivableTitleMovementType } from './receivable-title-movements/enum/receivable-title-movement-type.enum';
 import { ReceivableTitleMovementsService } from './receivable-title-movements/receivable-title-movements.service';
 import { ReceivableTitlesService } from './receivable-titles/receivable-titles.service';
+import { TransactionMapping } from './transaction-mappings/entities/transaction-mapping.entity';
 import { TransactionMethod } from './transaction-mappings/enum/transaction-method.enum';
 import { TransactionMappingsService } from './transaction-mappings/transaction-mappings.service';
 import { TransactionsService } from './transactions/transactions.service';
@@ -32,10 +34,22 @@ export class AccountingService {
     private paymentTitlesService: PaymentTitlesService,
     private receivableTitleMovementsService: ReceivableTitleMovementsService,
     private receivableTitlesService: ReceivableTitlesService,
+    private accountsService: AccountsService
   ) { }
 
   public async getBalanceSheet(dto: GetBalanceSheetDto): Promise<BalanceSheetResponseDto> {
-    const mappings = await this.transactionMappingsService.findAllForBalanceSheet(dto);
+
+    let mappings: TransactionMapping[] = [];
+    const accounts = await this.accountsService.findWithChildren(dto.accountCode);
+    for (const account of accounts) {
+      const accountMappings = await this.transactionMappingsService.findAllForBalanceSheet({
+        accountCode: account.code,
+        endDate: dto.endDate,
+        startDate: dto.startDate
+      });
+      mappings = [...mappings, ...accountMappings];
+    }
+
     let balance = 0;
     mappings.forEach(m => {
       if (m.method === TransactionMethod.Credit) {
