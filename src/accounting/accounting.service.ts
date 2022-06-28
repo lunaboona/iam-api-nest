@@ -139,60 +139,75 @@ export class AccountingService {
   }
 
   public async createPurchasePayment(dto: CreatePurchasePaymentDto): Promise<AccountingOperationResponseDto> {
-    const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
-    if (!paymentMethod) {
-      throw new NotFoundException('Payment method does not exist');
+    const queryRunner = this.entityManager.connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    
+    try {
+      const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
+      if (!paymentMethod) {
+        throw new NotFoundException('Payment method does not exist');
+      }
+
+      const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
+      if (!paymentTitle) {
+        throw new NotFoundException('Payment title does not exist');
+      }
+
+      const transaction = await this.transactionsService.create({
+        code: dto.transactionCode,
+        name: dto.transactionName
+      }, queryRunner);
+
+      const paymentTitleAccountCode = '2.1.2.01';
+
+      const titleMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Credit,
+        accountCode: paymentTitleAccountCode,
+        date: dto.date,
+        value: dto.paidValue
+      }, queryRunner);
+
+      const paymentMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Credit,
+        accountCode: paymentMethod.accountCode,
+        date: dto.date,
+        value: (dto.paidValue || 0) + (dto.interestValue || 0) + (dto.fineValue || 0)
+      }, queryRunner);
+
+      const paymentTitleMovement = await this.paymentTitleMovementsService.createPaymentMovement({
+        date: dto.date,
+        fineValue: dto.fineValue,
+        interestValue: dto.interestValue,
+        paidValue: dto.paidValue,
+        paymentMethodId: dto.paymentMethodId,
+        paymentTitleId: dto.paymentTitleId,
+        transactionMapping: paymentMapping
+      }, queryRunner);
+
+      await queryRunner.commitTransaction();
+
+      const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
+      const paymentMappingWithAccount = await this.transactionMappingsService.findOne(paymentMapping.id, ['account']);
+      const paymentTitleMovementExpanded = await this.paymentTitleMovementsService.findOne(paymentTitleMovement.id, true);
+
+      return {
+        transaction,
+        mappings: [
+          titleMappingWithAccount,
+          paymentMappingWithAccount
+        ],
+        paymentTitleMovement: paymentTitleMovementExpanded
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-
-    const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
-    if (!paymentTitle) {
-      throw new NotFoundException('Payment title does not exist');
-    }
-
-    const transaction = await this.transactionsService.create({
-      code: dto.transactionCode,
-      name: dto.transactionName
-    });
-
-    const paymentTitleAccountCode = '2.1.2.01';
-
-    const titleMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Credit,
-      accountCode: paymentTitleAccountCode,
-      date: dto.date,
-      value: dto.paidValue
-    });
-
-    const paymentMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Credit,
-      accountCode: paymentMethod.accountCode,
-      date: dto.date,
-      value: (dto.paidValue || 0) + (dto.interestValue || 0) + (dto.fineValue || 0)
-    });
-
-    const paymentTitleMovement = await this.paymentTitleMovementsService.createPaymentMovement({
-      date: dto.date,
-      fineValue: dto.fineValue,
-      interestValue: dto.interestValue,
-      paidValue: dto.paidValue,
-      paymentMethodId: dto.paymentMethodId,
-      paymentTitleId: dto.paymentTitleId,
-      transactionMappingId: paymentMapping.id
-    });
-
-    const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
-    const paymentMappingWithAccount = await this.transactionMappingsService.findOne(paymentMapping.id, ['account']);
-
-    return {
-      transaction,
-      mappings: [
-        titleMappingWithAccount,
-        paymentMappingWithAccount
-      ],
-      paymentTitleMovement
-    };
   }
 
   public async createPurchaseCancellation(dto: CreatePurchaseCancellationDto): Promise<AccountingOperationResponseDto> {

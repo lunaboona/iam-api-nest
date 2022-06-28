@@ -49,7 +49,7 @@ export class PaymentTitleMovementsService {
     return queryRunner.manager.save(paymentTitleMovement);
   }
 
-  public async createCancellationMovement(dto: CreateCancellationMovementDto): Promise<PaymentTitleMovement> {
+  public async createCancellationMovement(dto: CreateCancellationMovementDto, queryRunner: QueryRunner = null): Promise<PaymentTitleMovement> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
     if (!paymentTitle) {
       throw new NotFoundException('Payment title does not exist');
@@ -72,22 +72,19 @@ export class PaymentTitleMovementsService {
       {
         openValue: 0,
         status: PaymentTitleStatus.Cancelled
-      }
+      }, queryRunner
     );
 
-    const paymentTitleMovement: PaymentTitleMovement = {
-      ...(new PaymentTitleMovement()),
-      type: PaymentTitleMovementType.Cancellation,
-      date: dto.date,
-      paymentTitleId: updatedPaymentTitle.id,
-      transactionMappingId: dto.transactionMappingId
-    };
+    const paymentTitleMovement = new PaymentTitleMovement();
+    paymentTitleMovement.type = PaymentTitleMovementType.Cancellation;
+    paymentTitleMovement.date = dto.date;
+    paymentTitleMovement.paymentTitleId = updatedPaymentTitle.id;
+    paymentTitleMovement.transactionMappingId = dto.transactionMappingId;
 
-    const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
-    return await this.findOne(createdPaymentTitleMovement.id, true);
+    return queryRunner.manager.save(paymentTitleMovement);
   }
 
-  public async createPaymentMovement(dto: CreatePaymentMovementDto): Promise<PaymentTitleMovement> {
+  public async createPaymentMovement(dto: CreatePaymentMovementDto, queryRunner: QueryRunner = null): Promise<PaymentTitleMovement> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
     if (!paymentTitle) {
       throw new NotFoundException('Payment title does not exist');
@@ -95,11 +92,6 @@ export class PaymentTitleMovementsService {
 
     if (paymentTitle.status !== PaymentTitleStatus.Open) {
       throw new BadRequestException('Payment title must have OPEN status');
-    }
-
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
@@ -114,26 +106,18 @@ export class PaymentTitleMovementsService {
       {
         openValue: paymentTitle.openValue,
         status: paymentTitle.openValue > 0 ? PaymentTitleStatus.Open : PaymentTitleStatus.Settled
-      }
+      }, queryRunner
     );
 
-    const paymentTitleMovement: PaymentTitleMovement = {
-      ...(new PaymentTitleMovement()),
-      type: PaymentTitleMovementType.Payment,
-      date: dto.date,
-      paidValue: dto.paidValue,
-      fineValue: dto.fineValue,
-      interestValue: dto.interestValue,
-      paymentTitleId: updatedPaymentTitle.id,
-      paymentMethodId: dto.paymentMethodId,
-      transactionMappingId: dto.transactionMappingId
-    }
+    const paymentTitleMovement = new PaymentTitleMovement();
+    paymentTitleMovement.fillFields(dto);
+    paymentTitleMovement.type = PaymentTitleMovementType.Payment;
+    paymentTitleMovement.paymentTitleId = updatedPaymentTitle.id;
 
-    const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
-    return await this.findOne(createdPaymentTitleMovement.id, true);
+    return queryRunner.manager.save(paymentTitleMovement);
   }
 
-  public async createReversalMovement(dto: CreateReversalMovementDto): Promise<PaymentTitleMovement> {
+  public async createReversalMovement(dto: CreateReversalMovementDto, queryRunner: QueryRunner = null): Promise<PaymentTitleMovement> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
     if (!paymentTitle) {
       throw new NotFoundException('Payment title does not exist');
@@ -164,14 +148,12 @@ export class PaymentTitleMovementsService {
       }
     );
 
-    const paymentTitleMovement: PaymentTitleMovement = {
-      ...(new PaymentTitleMovement()),
-      type: PaymentTitleMovementType.Reversal,
-      date: dto.date,
-      paymentTitleId: updatedPaymentTitle.id,
-      paymentMethodId: dto.paymentMethodId,
-      transactionMappingId: dto.transactionMappingId
-    }
+    const paymentTitleMovement = new PaymentTitleMovement();
+    paymentTitleMovement.type = PaymentTitleMovementType.Reversal;
+    paymentTitleMovement.date = dto.date;
+    paymentTitleMovement.paymentTitleId = updatedPaymentTitle.id;
+    paymentTitleMovement.paymentMethodId = dto.paymentMethodId;
+    paymentTitleMovement.transactionMappingId = dto.transactionMappingId;
 
     const createdPaymentTitleMovement = await this.paymentTitleMovementsRepository.save(paymentTitleMovement);
     return await this.findOne(createdPaymentTitleMovement.id, true);
