@@ -80,12 +80,12 @@ export class AccountingService {
   public async createPurchasePayment(dto: CreatePurchasePaymentDto): Promise<AccountingOperationResponseDto> {
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -137,7 +137,7 @@ export class AccountingService {
   public async createPurchaseCancellation(dto: CreatePurchaseCancellationDto): Promise<AccountingOperationResponseDto> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -186,12 +186,12 @@ export class AccountingService {
   public async createPurchaseReversal(dto: CreatePurchaseReversalDto): Promise<AccountingOperationResponseDto> {
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId)
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -287,12 +287,12 @@ export class AccountingService {
   public async createSalePayment(dto: CreateSalePaymentDto): Promise<AccountingOperationResponseDto> {
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId)
     if (!receivableTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -344,7 +344,7 @@ export class AccountingService {
   public async createSaleCancellation(dto: CreateSaleCancellationDto): Promise<AccountingOperationResponseDto> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId)
     if (!receivableTitle) {
-      throw new NotFoundException('Receivable title not found');
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     const transaction = await this.transactionsService.create({
@@ -408,12 +408,12 @@ export class AccountingService {
   public async createSaleReversal(dto: CreateSaleReversalDto): Promise<AccountingOperationResponseDto> {
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
     if (!paymentMethod) {
-      throw new NotFoundException('Payment method not found');
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId)
     if (!receivableTitle) {
-      throw new NotFoundException('Receivable title not found');
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     const transaction = await this.transactionsService.create({

@@ -25,7 +25,7 @@ export class ReceivableTitlesService {
 
   public async findOne(id: string): Promise<ReceivableTitle> {
     if (!id) {
-      throw new NotFoundException();
+      throw new NotFoundException('Receivable title does not exist');
     }
     return await this.receivableTitlesRepository.findOne(id);
   }
@@ -33,7 +33,7 @@ export class ReceivableTitlesService {
   public async update(id: string, dto: UpdateReceivableTitleDto): Promise<ReceivableTitle> {
     let receivableTitle = await this.receivableTitlesRepository.findOne(id);
     if (!receivableTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     receivableTitle = {

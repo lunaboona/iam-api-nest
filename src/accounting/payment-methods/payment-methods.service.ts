@@ -24,7 +24,7 @@ export class PaymentMethodsService {
 
   public async findOne(id: string): Promise<PaymentMethod> {
     if (!id) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
     return await this.paymentMethodsRepository.findOne(id);
   }

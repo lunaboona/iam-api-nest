@@ -25,7 +25,7 @@ export class PaymentTitlesService {
 
   public async findOne(id: string): Promise<PaymentTitle> {
     if (!id) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
     return await this.paymentTitlesRepository.findOne(id);
   }
@@ -33,7 +33,7 @@ export class PaymentTitlesService {
   public async update(id: string, dto: UpdatePaymentTitleDto): Promise<PaymentTitle> {
     let paymentTitle = await this.paymentTitlesRepository.findOne(id);
     if (!paymentTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment title does not exist');
     }
 
     paymentTitle = {

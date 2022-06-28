@@ -24,12 +24,12 @@ export class ReceivableTitleMovementsService {
 
   public async createIssuingMovement(dto: CreateIssuingMovementDto): Promise<ReceivableTitleMovement> {
     if (!dto.value) {
-      throw new BadRequestException();
+      throw new BadRequestException('Value must be greater than 0');
     }
 
     const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
-      throw new NotFoundException();
+      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     // Possíveis validações
@@ -60,19 +60,19 @@ export class ReceivableTitleMovementsService {
   public async createCancellationMovement(dto: CreateCancellationMovementDto): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     if (
       receivableTitle.status !== ReceivableTitleStatus.Open
       || receivableTitle.originalValue !== receivableTitle.openValue
     ) {
-      throw new BadRequestException();
+      throw new BadRequestException('Receivable title must have OPEN status and no payments');
     }
 
     const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
-      throw new NotFoundException();
+      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     const updatedReceivableTitle = await this.receivableTitlesService.update(
@@ -98,21 +98,21 @@ export class ReceivableTitleMovementsService {
   public async createPaymentMovement(dto: CreatePaymentMovementDto): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     if (receivableTitle.status !== ReceivableTitleStatus.Open) {
-      throw new BadRequestException();
+      throw new BadRequestException('Receivable title must have OPEN status');
     }
 
     const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
-      throw new NotFoundException();
+      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     receivableTitle.openValue -= dto.paidValue;
@@ -144,24 +144,24 @@ export class ReceivableTitleMovementsService {
   public async createReversalMovement(dto: CreateReversalMovementDto): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
-      throw new NotFoundException();
+      throw new NotFoundException('Receivable title does not exist');
     }
 
     if (
       receivableTitle.status === ReceivableTitleStatus.Cancelled
       || receivableTitle.originalValue === receivableTitle.openValue
     ) {
-      throw new BadRequestException();
+      throw new BadRequestException('Receivable title must not be CANCELLED and must have at least one payment');
     }
 
     const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
     if (!transactionMapping) {
-      throw new NotFoundException();
+      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
     if (!paymentMethod) {
-      throw new NotFoundException();
+      throw new NotFoundException('Payment method does not exist');
     }
 
     const updatedReceivableTitle = await this.receivableTitlesService.update(
