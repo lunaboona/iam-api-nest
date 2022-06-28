@@ -4,5 +4,6 @@ export class CreateMovementDto {
   document: string;
   movementDefinitionId: string;
   warehouseId: string;
+  transactionCode?: string;
   productIds: string[];
 }

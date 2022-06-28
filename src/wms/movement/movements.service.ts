@@ -13,6 +13,7 @@ import { WarehousesService } from '../warehouses/warehouses.service';
 import { Repository } from 'typeorm';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { Movement } from './entities/movement.entity';
+import { TransactionsService } from 'src/accounting/transactions/transactions.service';
 
 @Injectable()
 export class MovementsService {
@@ -23,6 +24,7 @@ export class MovementsService {
     private warehousesService: WarehousesService,
     private productService: ProductsService,
     private documentTypesService: DocumentTypesService,
+    private transactionsService: TransactionsService
   ) {}
 
   public async getProducts(id: string): Promise<Product[]> {
@@ -47,6 +49,13 @@ export class MovementsService {
   }
 
   public async create(createMovementDto: CreateMovementDto): Promise<Movement> {
+    if (createMovementDto?.transactionCode) {
+      const transaction = await this.transactionsService.findOne(createMovementDto.transactionCode);
+      if (!transaction) {
+        throw new BadRequestException('Transaction does not exist');
+      }
+    }
+
     const movementDefinition = await this.movementDefinitionsService.findOne(
       createMovementDto.movementDefinitionId,
       true,
