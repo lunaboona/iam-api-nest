@@ -52,7 +52,7 @@ export class ReceivableTitleMovementsService {
     return queryRunner.manager.save(receivableTitleMovement);
   }
 
-  public async createCancellationMovement(dto: CreateCancellationMovementDto): Promise<ReceivableTitleMovement> {
+  public async createCancellationMovement(dto: CreateCancellationMovementDto, queryRunner: QueryRunner = null): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');
@@ -65,29 +65,22 @@ export class ReceivableTitleMovementsService {
       throw new BadRequestException('Receivable title must have OPEN status and no payments');
     }
 
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException('Transaction mapping does not exist');
-    }
-
     const updatedReceivableTitle = await this.receivableTitlesService.update(
       dto.receivableTitleId,
       {
         openValue: 0,
         status: ReceivableTitleStatus.Cancelled
-      }
+      },
+      queryRunner
     );
 
-    const receivableTitleMovement: ReceivableTitleMovement = {
-      ...(new ReceivableTitleMovement()),
-      type: ReceivableTitleMovementType.Cancellation,
-      date: dto.date,
-      receivableTitleId: updatedReceivableTitle.id,
-      transactionMappingId: dto.transactionMappingId
-    };
+    const receivableTitleMovement = new ReceivableTitleMovement();
+    receivableTitleMovement.type = ReceivableTitleMovementType.Cancellation,
+    receivableTitleMovement.date = dto.date,
+    receivableTitleMovement.receivableTitleId = updatedReceivableTitle.id,
+    receivableTitleMovement.transactionMappingId = dto.transactionMapping.id
 
-    const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
-    return await this.findOne(createdReceivableTitleMovement.id, true);
+    return queryRunner.manager.save(receivableTitleMovement);
   }
 
   public async createPaymentMovement(dto: CreatePaymentMovementDto, queryRunner: QueryRunner = null): Promise<ReceivableTitleMovement> {
@@ -112,7 +105,8 @@ export class ReceivableTitleMovementsService {
       {
         openValue: receivableTitle.openValue,
         status: receivableTitle.openValue > 0 ? ReceivableTitleStatus.Open : ReceivableTitleStatus.Settled
-      }
+      },
+      queryRunner
     );
 
     const receivableTitleMovement = new ReceivableTitleMovement()

@@ -33,7 +33,7 @@ export class ReceivableTitlesService {
     return await this.receivableTitlesRepository.findOne(id);
   }
 
-  public async update(id: string, dto: UpdateReceivableTitleDto): Promise<ReceivableTitle> {
+  public async update(id: string, dto: UpdateReceivableTitleDto, queryRunner: QueryRunner = null): Promise<ReceivableTitle> {
     let receivableTitle = await this.receivableTitlesRepository.findOne(id);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');
@@ -42,6 +42,6 @@ export class ReceivableTitlesService {
     receivableTitle.openValue = dto.openValue;
     receivableTitle.status = dto.status;
 
-    return await this.receivableTitlesRepository.save(receivableTitle);
+    return queryRunner.manager.save(receivableTitle);
   }
 }
