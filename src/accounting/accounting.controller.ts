@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AccountingService } from './accounting.service';
 import { CreatePurchaseCancellationDto } from './dto/create-purchase-cancellation.dto';
 import { CreatePurchasePaymentDto } from './dto/create-purchase-payment.dto';
@@ -8,12 +8,18 @@ import { CreateSaleCancellationDto } from './dto/create-sale-cancellation.dto';
 import { CreateSalePaymentDto } from './dto/create-sale-payment.dto';
 import { CreateSaleReversalDto } from './dto/create-sale-reversal.dto';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { GetBalanceSheetDto } from './dto/get-balance-sheet.dto';
 
 @Controller('accounting')
 export class AccountingController {
   constructor(
     private accountingService: AccountingService
   ) { }
+
+  @Get('balance-sheet')
+  getBalanceSheet(@Body() dto: GetBalanceSheetDto) {
+    return this.accountingService.getBalanceSheet(dto);
+  }
 
   @Post('purchase')
   createPurchase(@Body() dto: CreatePurchaseDto) {

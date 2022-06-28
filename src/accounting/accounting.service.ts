@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AccountingOperationResponseDto } from './dto/accounting-operation-response.dto';
+import { BalanceSheetResponseDto } from './dto/balance-sheet-response.dto';
+import { BalanceSheetTransactionDto } from './dto/balance-sheet-transaction.dto';
 import { CreatePurchaseCancellationDto } from './dto/create-purchase-cancellation.dto';
 import { CreatePurchasePaymentDto } from './dto/create-purchase-payment.dto';
 import { CreatePurchaseReversalDto } from './dto/create-purchase-reversal.dto';
@@ -8,6 +10,7 @@ import { CreateSaleCancellationDto } from './dto/create-sale-cancellation.dto';
 import { CreateSalePaymentDto } from './dto/create-sale-payment.dto';
 import { CreateSaleReversalDto } from './dto/create-sale-reversal.dto';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { GetBalanceSheetDto } from './dto/get-balance-sheet.dto';
 import { PaymentMethodsService } from './payment-methods/payment-methods.service';
 import { PaymentTitleMovementsService } from './payment-title-movements/payment-title-movements.service';
 import { PaymentTitlesService } from './payment-titles/payment-titles.service';
@@ -30,6 +33,33 @@ export class AccountingService {
     private receivableTitleMovementsService: ReceivableTitleMovementsService,
     private receivableTitlesService: ReceivableTitlesService,
   ) { }
+
+  public async getBalanceSheet(dto: GetBalanceSheetDto): Promise<BalanceSheetResponseDto> {
+    const mappings = await this.transactionMappingsService.findAllForBalanceSheet(dto);
+    let balance = 0;
+    mappings.forEach(m => {
+      if (m.method === TransactionMethod.Credit) {
+        balance -= Number(m.value);
+      } else {
+        balance += Number(m.value);
+      }
+    });
+
+    return {
+      balance,
+      transactions: mappings.map(m => <BalanceSheetTransactionDto>{
+        id: m.id,
+        date: m.date,
+        method: m.method,
+        value: m.value,
+        methodDescription: m.method === TransactionMethod.Credit ? 'Credit' : 'Debit',
+        transactionCode: m.transactionCode,
+        transactionName: m.transaction.name,
+        accountCode: m.accountCode,
+        accountName: m.account.name
+      })
+    }
+  }
 
   //#region Purchase
   public async createPurchase(dto: CreatePurchaseDto): Promise<AccountingOperationResponseDto> {
