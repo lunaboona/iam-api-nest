@@ -143,7 +143,7 @@ export class AccountingService {
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    
+
     try {
       const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId)
       if (!paymentMethod) {
@@ -316,48 +316,63 @@ export class AccountingService {
 
   //#region Sale
   public async createSale(dto: CreateSaleDto): Promise<AccountingOperationResponseDto> {
-    const transaction = await this.transactionsService.create({
-      code: dto.transactionCode,
-      name: dto.transactionName
-    });
+    const queryRunner = this.entityManager.connection.createQueryRunner();
 
-    const merchandiseAccountCode = '1.1.4.01';
-    const receivableTitleAccountCode = '1.1.3.01';
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const titleMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Debit,
-      accountCode: receivableTitleAccountCode,
-      date: dto.date,
-      value: dto.saleValue
-    });
+    try {
+      const transaction = await this.transactionsService.create({
+        code: dto.transactionCode,
+        name: dto.transactionName
+      }, queryRunner);
 
-    const merchandiseMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Credit,
-      accountCode: merchandiseAccountCode,
-      date: dto.date,
-      value: dto.originalValue
-    });
+      const merchandiseAccountCode = '1.1.4.01';
+      const receivableTitleAccountCode = '1.1.3.01';
 
-    const receivableTitleMovement = await this.receivableTitleMovementsService.createIssuingMovement({
-      ...dto.receivableTitle,
-      issuingDate: dto.date,
-      value: dto.saleValue,
-      transactionMappingId: titleMapping.id
-    });
+      const titleMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Debit,
+        accountCode: receivableTitleAccountCode,
+        date: dto.date,
+        value: dto.saleValue
+      }, queryRunner);
 
-    const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
-    const merchandiseMappingWithAccount = await this.transactionMappingsService.findOne(merchandiseMapping.id, ['account']);
+      const merchandiseMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Credit,
+        accountCode: merchandiseAccountCode,
+        date: dto.date,
+        value: dto.originalValue
+      }, queryRunner);
 
-    return {
-      transaction,
-      mappings: [
-        titleMappingWithAccount,
-        merchandiseMappingWithAccount
-      ],
-      receivableTitleMovement
-    };
+      const receivableTitleMovement = await this.receivableTitleMovementsService.createIssuingMovement({
+        ...dto.receivableTitle,
+        issuingDate: dto.date,
+        value: dto.saleValue,
+        transactionMapping: titleMapping
+      }, queryRunner);
+
+      await queryRunner.commitTransaction();
+
+      const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
+      const merchandiseMappingWithAccount = await this.transactionMappingsService.findOne(merchandiseMapping.id, ['account']);
+      const receivableTitleMovementExpanded = await this.receivableTitleMovementsService.findOne(receivableTitleMovement.id, true);
+
+      return {
+        transaction,
+        mappings: [
+          titleMappingWithAccount,
+          merchandiseMappingWithAccount
+        ],
+        receivableTitleMovement: receivableTitleMovementExpanded
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   public async createSalePayment(dto: CreateSalePaymentDto): Promise<AccountingOperationResponseDto> {

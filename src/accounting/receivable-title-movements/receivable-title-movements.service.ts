@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 import { ReceivableTitleStatus } from '../receivable-titles/enum/receivable-title-status.enum';
 import { ReceivableTitlesService } from '../receivable-titles/receivable-titles.service';
@@ -22,14 +22,12 @@ export class ReceivableTitleMovementsService {
     private transactionMappingsService: TransactionMappingsService
   ) {}
 
-  public async createIssuingMovement(dto: CreateIssuingMovementDto): Promise<ReceivableTitleMovement> {
+  public async createIssuingMovement(
+    dto: CreateIssuingMovementDto,
+    queryRunner: QueryRunner = null
+  ): Promise<ReceivableTitleMovement> {
     if (!dto.value) {
       throw new BadRequestException('Value must be greater than 0');
-    }
-
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     // Possíveis validações
@@ -43,18 +41,15 @@ export class ReceivableTitleMovementsService {
       payer: dto.payer,
       recipient: dto.recipient,
       status: ReceivableTitleStatus.Open
-    })
+    }, queryRunner)
 
-    const receivableTitleMovement: ReceivableTitleMovement = {
-      ...(new ReceivableTitleMovement()),
-      type: ReceivableTitleMovementType.Issuing,
-      date: dto.issuingDate,
-      receivableTitleId: receivableTitle.id,
-      transactionMappingId: dto.transactionMappingId
-    };
+    const receivableTitleMovement = new ReceivableTitleMovement();
+    receivableTitleMovement.type = ReceivableTitleMovementType.Issuing,
+    receivableTitleMovement.date = dto.issuingDate,
+    receivableTitleMovement.receivableTitleId = receivableTitle.id,
+    receivableTitleMovement.transactionMappingId = dto.transactionMapping.id
 
-    const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
-    return await this.findOne(createdReceivableTitleMovement.id, true);
+    return queryRunner.manager.save(receivableTitleMovement);
   }
 
   public async createCancellationMovement(dto: CreateCancellationMovementDto): Promise<ReceivableTitleMovement> {

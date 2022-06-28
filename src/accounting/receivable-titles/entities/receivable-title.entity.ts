@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { CreateReceivableTitleDto } from '../dto/create-receivable-title.dto';
 import { ReceivableTitleStatus } from '../enum/receivable-title-status.enum';
 
 @Entity()
@@ -30,4 +31,14 @@ export class ReceivableTitle {
     default: ReceivableTitleStatus.Open,
   })
   status: ReceivableTitleStatus;
+
+  public fillFields(dto: CreateReceivableTitleDto) {
+    this.name = dto.name;
+    this.originalValue = dto.originalValue;
+    this.openValue = dto.openValue;
+    this.status = dto.status;
+    this.dueDate = dto.dueDate;
+    this.payer = dto.payer;
+    this.recipient = dto.recipient;
+  }
 }
