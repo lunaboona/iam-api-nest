@@ -12,7 +12,7 @@ export class PaymentTitlesService {
     private paymentTitlesRepository: Repository<PaymentTitle>,
   ) {}
 
-  public async create(dto: CreatePaymentTitleDto, queryRunner: QueryRunner = null): Promise<PaymentTitle> {
+  public async create(dto: CreatePaymentTitleDto, queryRunner: QueryRunner): Promise<PaymentTitle> {
     const paymentTitle = new PaymentTitle();
     paymentTitle.fillFields(dto);
 
@@ -30,7 +30,7 @@ export class PaymentTitlesService {
     return await this.paymentTitlesRepository.findOne(id);
   }
 
-  public async update(id: string, dto: UpdatePaymentTitleDto, queryRunner: QueryRunner = null): Promise<PaymentTitle> {
+  public async update(id: string, dto: UpdatePaymentTitleDto, queryRunner: QueryRunner): Promise<PaymentTitle> {
     let paymentTitle = await this.paymentTitlesRepository.findOne(id);
     if (!paymentTitle) {
       throw new NotFoundException('Payment title does not exist');

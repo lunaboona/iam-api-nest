@@ -20,10 +20,7 @@ export class ReceivableTitleMovementsService {
     private paymentMethodsService: PaymentMethodsService
   ) {}
 
-  public async createIssuingMovement(
-    dto: CreateIssuingMovementDto,
-    queryRunner: QueryRunner = null
-  ): Promise<ReceivableTitleMovement> {
+  public async createIssuingMovement(dto: CreateIssuingMovementDto, queryRunner: QueryRunner): Promise<ReceivableTitleMovement> {
     if (!dto.value) {
       throw new BadRequestException('Value must be greater than 0');
     }
@@ -50,7 +47,7 @@ export class ReceivableTitleMovementsService {
     return queryRunner.manager.save(receivableTitleMovement);
   }
 
-  public async createCancellationMovement(dto: CreateCancellationMovementDto, queryRunner: QueryRunner = null): Promise<ReceivableTitleMovement> {
+  public async createCancellationMovement(dto: CreateCancellationMovementDto, queryRunner: QueryRunner): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');
@@ -81,7 +78,7 @@ export class ReceivableTitleMovementsService {
     return queryRunner.manager.save(receivableTitleMovement);
   }
 
-  public async createPaymentMovement(dto: CreatePaymentMovementDto, queryRunner: QueryRunner = null): Promise<ReceivableTitleMovement> {
+  public async createPaymentMovement(dto: CreatePaymentMovementDto, queryRunner: QueryRunner): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');
@@ -120,7 +117,7 @@ export class ReceivableTitleMovementsService {
     return queryRunner.manager.save(receivableTitleMovement);
   }
 
-  public async createReversalMovement(dto: CreateReversalMovementDto, queryRunner: QueryRunner = null): Promise<ReceivableTitleMovement> {
+  public async createReversalMovement(dto: CreateReversalMovementDto, queryRunner: QueryRunner): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');

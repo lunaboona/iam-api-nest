@@ -4,7 +4,6 @@ import { QueryRunner, Repository } from 'typeorm';
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 import { PaymentTitleStatus } from '../payment-titles/enum/payment-title-status.enum';
 import { PaymentTitlesService } from '../payment-titles/payment-titles.service';
-import { TransactionMappingsService } from '../transaction-mappings/transaction-mappings.service';
 import { CreateCancellationMovementDto } from './dto/create-cancellation-movement.dto';
 import { CreateIssuingMovementDto } from './dto/create-issuing-movement.dto';
 import { CreatePaymentMovementDto } from './dto/create-payment-movement.dto';
@@ -18,11 +17,10 @@ export class PaymentTitleMovementsService {
     @InjectRepository(PaymentTitleMovement)
     private paymentTitleMovementsRepository: Repository<PaymentTitleMovement>,
     private paymentTitlesService: PaymentTitlesService,
-    private paymentMethodsService: PaymentMethodsService,
-    private transactionMappingsService: TransactionMappingsService
+    private paymentMethodsService: PaymentMethodsService
   ) {}
 
-  public async createIssuingMovement(dto: CreateIssuingMovementDto, queryRunner: QueryRunner = null): Promise<PaymentTitleMovement> {
+  public async createIssuingMovement(dto: CreateIssuingMovementDto, queryRunner: QueryRunner): Promise<PaymentTitleMovement> {
     if (!dto.value) {
       throw new BadRequestException('Value must be greater than 0');
     }
@@ -49,7 +47,7 @@ export class PaymentTitleMovementsService {
     return queryRunner.manager.save(paymentTitleMovement);
   }
 
-  public async createCancellationMovement(dto: CreateCancellationMovementDto, queryRunner: QueryRunner = null): Promise<PaymentTitleMovement> {
+  public async createCancellationMovement(dto: CreateCancellationMovementDto, queryRunner: QueryRunner): Promise<PaymentTitleMovement> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
     if (!paymentTitle) {
       throw new NotFoundException('Payment title does not exist');
@@ -80,7 +78,7 @@ export class PaymentTitleMovementsService {
     return queryRunner.manager.save(paymentTitleMovement);
   }
 
-  public async createPaymentMovement(dto: CreatePaymentMovementDto, queryRunner: QueryRunner = null): Promise<PaymentTitleMovement> {
+  public async createPaymentMovement(dto: CreatePaymentMovementDto, queryRunner: QueryRunner): Promise<PaymentTitleMovement> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
     if (!paymentTitle) {
       throw new NotFoundException('Payment title does not exist');
@@ -113,7 +111,7 @@ export class PaymentTitleMovementsService {
     return queryRunner.manager.save(paymentTitleMovement);
   }
 
-  public async createReversalMovement(dto: CreateReversalMovementDto, queryRunner: QueryRunner = null): Promise<PaymentTitleMovement> {
+  public async createReversalMovement(dto: CreateReversalMovementDto, queryRunner: QueryRunner): Promise<PaymentTitleMovement> {
     const paymentTitle = await this.paymentTitlesService.findOne(dto.paymentTitleId);
     if (!paymentTitle) {
       throw new NotFoundException('Payment title does not exist');

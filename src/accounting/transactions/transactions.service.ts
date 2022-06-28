@@ -15,10 +15,7 @@ export class TransactionsService {
     private transactionsRepository: Repository<Transaction>,
   ) {}
 
-  public async create(
-    dto: CreateTransactionDto,
-    queryRunner: QueryRunner = null,
-  ): Promise<Transaction> {
+  public async create(dto: CreateTransactionDto, queryRunner: QueryRunner): Promise<Transaction> {
     if (!dto.code) {
       throw new BadRequestException('Transaction code must not be empty');
     }

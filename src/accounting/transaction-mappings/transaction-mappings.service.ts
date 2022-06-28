@@ -12,7 +12,7 @@ export class TransactionMappingsService {
     private transactionMappingsRepository: Repository<TransactionMapping>,
   ) {}
 
-  public async create(dto: CreateTransactionMappingDto, queryRunner: QueryRunner = null): Promise<TransactionMapping> {
+  public async create(dto: CreateTransactionMappingDto, queryRunner: QueryRunner): Promise<TransactionMapping> {
     const transactionMapping = new TransactionMapping();
     transactionMapping.fillFields(dto);
 

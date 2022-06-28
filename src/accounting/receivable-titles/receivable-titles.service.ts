@@ -12,10 +12,7 @@ export class ReceivableTitlesService {
     private receivableTitlesRepository: Repository<ReceivableTitle>,
   ) {}
 
-  public async create(
-    dto: CreateReceivableTitleDto,
-    queryRunner: QueryRunner = null
-  ): Promise<ReceivableTitle> {
+  public async create(dto: CreateReceivableTitleDto, queryRunner: QueryRunner): Promise<ReceivableTitle> {
     const receivableTitle = new ReceivableTitle();
     receivableTitle.fillFields(dto);
 
@@ -33,7 +30,7 @@ export class ReceivableTitlesService {
     return await this.receivableTitlesRepository.findOne(id);
   }
 
-  public async update(id: string, dto: UpdateReceivableTitleDto, queryRunner: QueryRunner = null): Promise<ReceivableTitle> {
+  public async update(id: string, dto: UpdateReceivableTitleDto, queryRunner: QueryRunner): Promise<ReceivableTitle> {
     let receivableTitle = await this.receivableTitlesRepository.findOne(id);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');
