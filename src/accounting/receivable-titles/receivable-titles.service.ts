@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { CreateReceivableTitleDto } from './dto/create-receivable-title.dto';
 import { UpdateReceivableTitleDto } from './dto/update-payment-title.dto';
 import { ReceivableTitle } from './entities/receivable-title.entity';
@@ -12,11 +12,11 @@ export class ReceivableTitlesService {
     private receivableTitlesRepository: Repository<ReceivableTitle>,
   ) {}
 
-  public async create(createReceivableTitleDto: CreateReceivableTitleDto): Promise<ReceivableTitle> {
-    let receivableTitle = new ReceivableTitle();
-    receivableTitle = { ...receivableTitle, ...createReceivableTitleDto };
+  public async create(dto: CreateReceivableTitleDto, queryRunner: QueryRunner): Promise<ReceivableTitle> {
+    const receivableTitle = new ReceivableTitle();
+    receivableTitle.fillFields(dto);
 
-    return await this.receivableTitlesRepository.save(receivableTitle);
+    return await queryRunner.manager.save(receivableTitle);
   }
 
   public async findAll(): Promise<ReceivableTitle[]> {
@@ -30,17 +30,15 @@ export class ReceivableTitlesService {
     return await this.receivableTitlesRepository.findOne(id);
   }
 
-  public async update(id: string, dto: UpdateReceivableTitleDto): Promise<ReceivableTitle> {
+  public async update(id: string, dto: UpdateReceivableTitleDto, queryRunner: QueryRunner): Promise<ReceivableTitle> {
     let receivableTitle = await this.receivableTitlesRepository.findOne(id);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');
     }
 
-    receivableTitle = {
-      ...receivableTitle,
-      ...dto
-    };
+    receivableTitle.openValue = dto.openValue;
+    receivableTitle.status = dto.status;
 
-    return await this.receivableTitlesRepository.save(receivableTitle);
+    return queryRunner.manager.save(receivableTitle);
   }
 }

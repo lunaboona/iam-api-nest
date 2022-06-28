@@ -1,3 +1,4 @@
+import { TransactionMapping } from 'src/accounting/transaction-mappings/entities/transaction-mapping.entity';
 export class CreateIssuingMovementDto {
   name: string;
   issuingDate: Date;
@@ -5,5 +6,5 @@ export class CreateIssuingMovementDto {
   value: number;
   payer: string;
   recipient: string;
-  transactionMappingId: string;
+  transactionMapping: TransactionMapping;
 }

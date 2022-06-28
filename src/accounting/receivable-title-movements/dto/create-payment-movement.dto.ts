@@ -1,3 +1,5 @@
+import { TransactionMapping } from 'src/accounting/transaction-mappings/entities/transaction-mapping.entity';
+
 export class CreatePaymentMovementDto {
   date: Date;
   paidValue: number;
@@ -5,5 +7,5 @@ export class CreatePaymentMovementDto {
   fineValue: number;
   receivableTitleId: string;
   paymentMethodId: string;
-  transactionMappingId: string;
+  transactionMapping: TransactionMapping;
 }

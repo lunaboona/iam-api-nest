@@ -2,6 +2,7 @@ import { PaymentMethod } from 'src/accounting/payment-methods/entities/payment-m
 import { PaymentTitle } from 'src/accounting/payment-titles/entities/payment-title.entity';
 import { TransactionMapping } from 'src/accounting/transaction-mappings/entities/transaction-mapping.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { CreatePaymentMovementDto } from '../dto/create-payment-movement.dto';
 import { PaymentTitleMovementType } from '../enum/payment-title-movement-type.enum';
 
 @Entity()
@@ -48,4 +49,14 @@ export class PaymentTitleMovement {
   @ManyToOne(() => PaymentMethod, { nullable: true })
   @JoinColumn({ name: 'paymentMethodId' })
   paymentMethod?: PaymentMethod;
+
+  public fillFields(dto: CreatePaymentMovementDto) {
+    this.date = dto.date;
+    this.paidValue = dto.paidValue;
+    this.interestValue = dto.interestValue;
+    this.fineValue = dto.fineValue;
+    this.paymentTitleId = dto.paymentTitleId;
+    this.paymentMethodId = dto.paymentMethodId;
+    this.transactionMappingId = dto.transactionMapping.id;
+  }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, QueryRunner, Repository } from 'typeorm';
 import { GetBalanceSheetDto } from '../dto/get-balance-sheet.dto';
 import { CreateTransactionMappingDto } from './dto/create-transaction-mapping.dto';
 import { TransactionMapping } from './entities/transaction-mapping.entity';
@@ -12,11 +12,11 @@ export class TransactionMappingsService {
     private transactionMappingsRepository: Repository<TransactionMapping>,
   ) {}
 
-  public async create(createTransactionMappingDto: CreateTransactionMappingDto): Promise<TransactionMapping> {
-    let transactionMapping = new TransactionMapping();
-    transactionMapping = { ...transactionMapping, ...createTransactionMappingDto };
+  public async create(dto: CreateTransactionMappingDto, queryRunner: QueryRunner): Promise<TransactionMapping> {
+    const transactionMapping = new TransactionMapping();
+    transactionMapping.fillFields(dto);
 
-    return await this.transactionMappingsRepository.save(transactionMapping);
+    return await queryRunner.manager.save(transactionMapping);
   }
 
   public async findAll(): Promise<TransactionMapping[]> {

@@ -1,10 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 import { ReceivableTitleStatus } from '../receivable-titles/enum/receivable-title-status.enum';
 import { ReceivableTitlesService } from '../receivable-titles/receivable-titles.service';
-import { TransactionMappingsService } from '../transaction-mappings/transaction-mappings.service';
 import { CreateCancellationMovementDto } from './dto/create-cancellation-movement.dto';
 import { CreateIssuingMovementDto } from './dto/create-issuing-movement.dto';
 import { CreatePaymentMovementDto } from './dto/create-payment-movement.dto';
@@ -18,18 +17,12 @@ export class ReceivableTitleMovementsService {
     @InjectRepository(ReceivableTitleMovement)
     private receivableTitleMovementsRepository: Repository<ReceivableTitleMovement>,
     private receivableTitlesService: ReceivableTitlesService,
-    private paymentMethodsService: PaymentMethodsService,
-    private transactionMappingsService: TransactionMappingsService
+    private paymentMethodsService: PaymentMethodsService
   ) {}
 
-  public async createIssuingMovement(dto: CreateIssuingMovementDto): Promise<ReceivableTitleMovement> {
+  public async createIssuingMovement(dto: CreateIssuingMovementDto, queryRunner: QueryRunner): Promise<ReceivableTitleMovement> {
     if (!dto.value) {
       throw new BadRequestException('Value must be greater than 0');
-    }
-
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     // Possíveis validações
@@ -43,21 +36,18 @@ export class ReceivableTitleMovementsService {
       payer: dto.payer,
       recipient: dto.recipient,
       status: ReceivableTitleStatus.Open
-    })
+    }, queryRunner)
 
-    const receivableTitleMovement: ReceivableTitleMovement = {
-      ...(new ReceivableTitleMovement()),
-      type: ReceivableTitleMovementType.Issuing,
-      date: dto.issuingDate,
-      receivableTitleId: receivableTitle.id,
-      transactionMappingId: dto.transactionMappingId
-    };
+    const receivableTitleMovement = new ReceivableTitleMovement();
+    receivableTitleMovement.type = ReceivableTitleMovementType.Issuing,
+    receivableTitleMovement.date = dto.issuingDate,
+    receivableTitleMovement.receivableTitleId = receivableTitle.id,
+    receivableTitleMovement.transactionMappingId = dto.transactionMapping.id
 
-    const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
-    return await this.findOne(createdReceivableTitleMovement.id, true);
+    return queryRunner.manager.save(receivableTitleMovement);
   }
 
-  public async createCancellationMovement(dto: CreateCancellationMovementDto): Promise<ReceivableTitleMovement> {
+  public async createCancellationMovement(dto: CreateCancellationMovementDto, queryRunner: QueryRunner): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');
@@ -70,32 +60,25 @@ export class ReceivableTitleMovementsService {
       throw new BadRequestException('Receivable title must have OPEN status and no payments');
     }
 
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException('Transaction mapping does not exist');
-    }
-
     const updatedReceivableTitle = await this.receivableTitlesService.update(
       dto.receivableTitleId,
       {
         openValue: 0,
         status: ReceivableTitleStatus.Cancelled
-      }
+      },
+      queryRunner
     );
 
-    const receivableTitleMovement: ReceivableTitleMovement = {
-      ...(new ReceivableTitleMovement()),
-      type: ReceivableTitleMovementType.Cancellation,
-      date: dto.date,
-      receivableTitleId: updatedReceivableTitle.id,
-      transactionMappingId: dto.transactionMappingId
-    };
+    const receivableTitleMovement = new ReceivableTitleMovement();
+    receivableTitleMovement.type = ReceivableTitleMovementType.Cancellation,
+    receivableTitleMovement.date = dto.date,
+    receivableTitleMovement.receivableTitleId = updatedReceivableTitle.id,
+    receivableTitleMovement.transactionMappingId = dto.transactionMapping.id
 
-    const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
-    return await this.findOne(createdReceivableTitleMovement.id, true);
+    return queryRunner.manager.save(receivableTitleMovement);
   }
 
-  public async createPaymentMovement(dto: CreatePaymentMovementDto): Promise<ReceivableTitleMovement> {
+  public async createPaymentMovement(dto: CreatePaymentMovementDto, queryRunner: QueryRunner): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');
@@ -103,11 +86,6 @@ export class ReceivableTitleMovementsService {
 
     if (receivableTitle.status !== ReceivableTitleStatus.Open) {
       throw new BadRequestException('Receivable title must have OPEN status');
-    }
-
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException('Transaction mapping does not exist');
     }
 
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
@@ -122,26 +100,24 @@ export class ReceivableTitleMovementsService {
       {
         openValue: receivableTitle.openValue,
         status: receivableTitle.openValue > 0 ? ReceivableTitleStatus.Open : ReceivableTitleStatus.Settled
-      }
+      },
+      queryRunner
     );
 
-    const receivableTitleMovement: ReceivableTitleMovement = {
-      ...(new ReceivableTitleMovement()),
-      type: ReceivableTitleMovementType.Payment,
-      date: dto.date,
-      paidValue: dto.paidValue,
-      fineValue: dto.fineValue,
-      interestValue: dto.interestValue,
-      receivableTitleId: updatedReceivableTitle.id,
-      paymentMethodId: dto.paymentMethodId,
-      transactionMappingId: dto.transactionMappingId
-    }
+    const receivableTitleMovement = new ReceivableTitleMovement()
+    receivableTitleMovement.type = ReceivableTitleMovementType.Payment,
+    receivableTitleMovement.date = dto.date;
+    receivableTitleMovement.paidValue = dto.paidValue;
+    receivableTitleMovement.fineValue = dto.fineValue;
+    receivableTitleMovement.interestValue = dto.interestValue;
+    receivableTitleMovement.receivableTitleId = updatedReceivableTitle.id;
+    receivableTitleMovement.paymentMethodId = dto.paymentMethodId;
+    receivableTitleMovement.transactionMappingId = dto.transactionMapping.id;
 
-    const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
-    return await this.findOne(createdReceivableTitleMovement.id, true);
+    return queryRunner.manager.save(receivableTitleMovement);
   }
 
-  public async createReversalMovement(dto: CreateReversalMovementDto): Promise<ReceivableTitleMovement> {
+  public async createReversalMovement(dto: CreateReversalMovementDto, queryRunner: QueryRunner): Promise<ReceivableTitleMovement> {
     const receivableTitle = await this.receivableTitlesService.findOne(dto.receivableTitleId);
     if (!receivableTitle) {
       throw new NotFoundException('Receivable title does not exist');
@@ -154,11 +130,6 @@ export class ReceivableTitleMovementsService {
       throw new BadRequestException('Receivable title must not be CANCELLED and must have at least one payment');
     }
 
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException('Transaction mapping does not exist');
-    }
-
     const paymentMethod = await this.paymentMethodsService.findOne(dto.paymentMethodId);
     if (!paymentMethod) {
       throw new NotFoundException('Payment method does not exist');
@@ -169,20 +140,18 @@ export class ReceivableTitleMovementsService {
       {
         openValue: 0,
         status: ReceivableTitleStatus.Cancelled
-      }
+      },
+      queryRunner
     );
 
-    const receivableTitleMovement: ReceivableTitleMovement = {
-      ...(new ReceivableTitleMovement()),
-      type: ReceivableTitleMovementType.Reversal,
-      date: dto.date,
-      receivableTitleId: updatedReceivableTitle.id,
-      paymentMethodId: dto.paymentMethodId,
-      transactionMappingId: dto.transactionMappingId
-    }
+    const receivableTitleMovement = new ReceivableTitleMovement();
+    receivableTitleMovement.type = ReceivableTitleMovementType.Reversal;
+    receivableTitleMovement.date = dto.date;
+    receivableTitleMovement.receivableTitleId = updatedReceivableTitle.id;
+    receivableTitleMovement.paymentMethodId = dto.paymentMethodId;
+    receivableTitleMovement.transactionMappingId = dto.transactionMapping.id;
 
-    const createdReceivableTitleMovement = await this.receivableTitleMovementsRepository.save(receivableTitleMovement);
-    return await this.findOne(createdReceivableTitleMovement.id, true);
+    return queryRunner.manager.save(receivableTitleMovement);
   }
 
   public async findAll(): Promise<ReceivableTitleMovement[]> {
