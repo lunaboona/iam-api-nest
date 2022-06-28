@@ -216,47 +216,62 @@ export class AccountingService {
       throw new NotFoundException('Payment title does not exist');
     }
 
-    const transaction = await this.transactionsService.create({
-      code: dto.transactionCode,
-      name: dto.transactionName
-    });
+    const queryRunner = this.entityManager.connection.createQueryRunner();
 
-    const merchandiseAccountCode = '1.1.4.01';
-    const paymentTitleAccountCode = '2.1.2.01';
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const titleMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Credit,
-      accountCode: paymentTitleAccountCode,
-      date: dto.date,
-      value: paymentTitle.originalValue
-    });
+    try {
+      const transaction = await this.transactionsService.create({
+        code: dto.transactionCode,
+        name: dto.transactionName
+      }, queryRunner);
 
-    const merchandiseMapping = await this.transactionMappingsService.create({
-      transactionCode: dto.transactionCode,
-      method: TransactionMethod.Credit,
-      accountCode: merchandiseAccountCode,
-      date: dto.date,
-      value: paymentTitle.originalValue
-    });
+      const merchandiseAccountCode = '1.1.4.01';
+      const paymentTitleAccountCode = '2.1.2.01';
 
-    const paymentTitleMovement = await this.paymentTitleMovementsService.createCancellationMovement({
-      date: dto.date,
-      paymentTitleId: dto.paymentTitleId,
-      transactionMappingId: titleMapping.id
-    });
+      const titleMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Credit,
+        accountCode: paymentTitleAccountCode,
+        date: dto.date,
+        value: paymentTitle.originalValue
+      }, queryRunner);
 
-    const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
-    const merchandiseMappingWithAccount = await this.transactionMappingsService.findOne(merchandiseMapping.id, ['account']);
+      const merchandiseMapping = await this.transactionMappingsService.create({
+        transactionCode: dto.transactionCode,
+        method: TransactionMethod.Credit,
+        accountCode: merchandiseAccountCode,
+        date: dto.date,
+        value: paymentTitle.originalValue
+      }, queryRunner);
 
-    return {
-      transaction,
-      mappings: [
-        titleMappingWithAccount,
-        merchandiseMappingWithAccount
-      ],
-      paymentTitleMovement
-    };
+      const paymentTitleMovement = await this.paymentTitleMovementsService.createCancellationMovement({
+        date: dto.date,
+        paymentTitleId: dto.paymentTitleId,
+        transactionMapping: titleMapping
+      }, queryRunner);
+
+      await queryRunner.commitTransaction();
+
+      const titleMappingWithAccount = await this.transactionMappingsService.findOne(titleMapping.id, ['account']);
+      const merchandiseMappingWithAccount = await this.transactionMappingsService.findOne(merchandiseMapping.id, ['account']);
+      const paymentTitleMovementExpanded = await this.paymentTitleMovementsService.findOne(paymentTitleMovement.id, true);
+
+      return {
+        transaction,
+        mappings: [
+          titleMappingWithAccount,
+          merchandiseMappingWithAccount
+        ],
+        paymentTitleMovement: paymentTitleMovementExpanded
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   public async createPurchaseReversal(dto: CreatePurchaseReversalDto): Promise<AccountingOperationResponseDto> {

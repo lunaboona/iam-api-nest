@@ -62,24 +62,20 @@ export class PaymentTitleMovementsService {
       throw new BadRequestException('Payment title must have OPEN status and no payments');
     }
 
-    const transactionMapping = await this.transactionMappingsService.findOne(dto.transactionMappingId);
-    if (!transactionMapping) {
-      throw new NotFoundException('Transaction mapping does not exist');
-    }
-
     const updatedPaymentTitle = await this.paymentTitlesService.update(
       dto.paymentTitleId,
       {
         openValue: 0,
         status: PaymentTitleStatus.Cancelled
-      }, queryRunner
+      },
+      queryRunner
     );
 
     const paymentTitleMovement = new PaymentTitleMovement();
     paymentTitleMovement.type = PaymentTitleMovementType.Cancellation;
     paymentTitleMovement.date = dto.date;
     paymentTitleMovement.paymentTitleId = updatedPaymentTitle.id;
-    paymentTitleMovement.transactionMappingId = dto.transactionMappingId;
+    paymentTitleMovement.transactionMappingId = dto.transactionMapping.id;
 
     return queryRunner.manager.save(paymentTitleMovement);
   }
